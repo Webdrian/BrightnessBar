@@ -87,12 +87,18 @@ final class DDCLink {
     private let replyLengthByte: UInt8 = 0x88   // 0x80 | 8 data bytes in a VCP feature reply
     private let replyChecksumSeed: UInt8 = 0x50
 
-    // Timing, empirically tuned on an LG HDR 4K over DisplayPort.
     private let interWriteDelay: UInt32 = 10_000     // between the two request writes
-    private let readSettleDelay: UInt32 = 80_000     // before pulling the reply off the bus
     private let retryDelay: UInt32 = 100_000
     private let postWriteDelay: UInt32 = 15_000      // bus cool-down after a Set
-    private let readAttempts = 4
+
+    /// How long to wait before pulling a reply off the bus. Monitors differ by more than an
+    /// order of magnitude here, so instead of one hand-tuned constant the link climbs this
+    /// ladder until the display answers, then stays at the step that worked.
+    private static let settleLadder: [UInt32] = [40_000, 80_000, 160_000, 320_000]
+    private var settleStep: Int
+
+    /// The step that ended up working, so it can be remembered across launches.
+    var learnedSettleStep: Int { settleStep }
 
     private let avService: CFTypeRef
     private let queue: DispatchQueue
@@ -105,8 +111,9 @@ final class DDCLink {
     /// loses its DDC path (re-plugged behind an adapter) stops pretending to be adjustable.
     var busFailureHandler: (() -> Void)?
 
-    init(avService: CFTypeRef, label: String) {
+    init(avService: CFTypeRef, label: String, settleStep: Int = 0) {
         self.avService = avService
+        self.settleStep = min(max(settleStep, 0), Self.settleLadder.count - 1)
         self.queue = DispatchQueue(label: "brightnessbar.ddc.\(label)", qos: .userInitiated)
     }
 
@@ -198,31 +205,100 @@ final class DDCLink {
         var lastWriteError: IOReturn = KERN_SUCCESS
         var anyWriteSucceeded = false
 
-        for attempt in 0..<readAttempts {
-            var request: [UInt8] = [0x82, 0x01, vcp.rawValue, 0]
-            request[3] = checksum(of: request[0...2], seed: displayAddress ^ hostAddress)
+        // Start at the step that worked last time and climb only if this display stays silent.
+        for step in settleStep..<Self.settleLadder.count {
+            for attempt in 0..<2 {
+                var request: [UInt8] = [0x82, 0x01, vcp.rawValue, 0]
+                request[3] = checksum(of: request[0...2], seed: displayAddress ^ hostAddress)
 
-            for _ in 0..<2 {
-                let rc = send(&request)
-                if rc == KERN_SUCCESS { anyWriteSucceeded = true } else { lastWriteError = rc }
-                usleep(interWriteDelay)
-            }
-            // A refused write means the channel itself is gone; retrying cannot help.
-            guard anyWriteSucceeded else { break }
+                for _ in 0..<2 {
+                    let rc = send(&request)
+                    if rc == KERN_SUCCESS { anyWriteSucceeded = true } else { lastWriteError = rc }
+                    usleep(interWriteDelay)
+                }
+                // A refused write means the channel is gone; no delay can fix that.
+                guard anyWriteSucceeded else { return .busUnavailable(lastWriteError) }
 
-            usleep(readSettleDelay)
+                usleep(Self.settleLadder[step])
 
-            var reply = [UInt8](repeating: 0, count: 12)
-            let rc = reply.withUnsafeMutableBytes {
-                avReadI2C?(avService, chipAddress, dataOffset, $0.baseAddress!, UInt32($0.count)) ?? KERN_FAILURE
+                var reply = [UInt8](repeating: 0, count: 12)
+                let rc = reply.withUnsafeMutableBytes {
+                    avReadI2C?(avService, chipAddress, dataOffset, $0.baseAddress!, UInt32($0.count)) ?? KERN_FAILURE
+                }
+                if rc == KERN_SUCCESS, let parsed = parseReply(reply, expecting: vcp) {
+                    settleStep = step
+                    return .value(current: parsed.current, max: parsed.max)
+                }
+                if attempt == 0 { usleep(retryDelay) }
             }
-            if rc == KERN_SUCCESS, let parsed = parseReply(reply, expecting: vcp) {
-                return .value(current: parsed.current, max: parsed.max)
-            }
-            if attempt < readAttempts - 1 { usleep(retryDelay) }
         }
 
-        return anyWriteSucceeded ? .noReply : .busUnavailable(lastWriteError)
+        return .noReply
+    }
+
+    // MARK: Capability string
+    //
+    // VCP 0xF3 returns the monitor's self-description in fragments: each request names a byte
+    // offset, each reply carries the next slice, and a zero-length slice ends it.
+
+    /// Reads the whole capability string, or nil when the monitor does not answer 0xF3.
+    func readCapabilitiesSync() -> String? {
+        queue.sync {
+            var text = ""
+            var offset: UInt16 = 0
+            // Guard against a display that never reports the end: 4 KB is far beyond any real
+            // capability string.
+            for _ in 0..<160 {
+                guard let fragment = capabilityFragment(at: offset) else {
+                    return text.isEmpty ? nil : text
+                }
+                if fragment.isEmpty { return text.isEmpty ? nil : text }
+                text += String(decoding: fragment, as: UTF8.self)
+                offset += UInt16(fragment.count)
+                if text.count > 4096 { return text }
+            }
+            return text.isEmpty ? nil : text
+        }
+    }
+
+    /// Request: [0x83][0xF3][offsetHi][offsetLo][checksum]
+    /// Reply:   [0x6E][len][0xE3][offsetHi][offsetLo][data…][checksum]
+    ///
+    /// The length byte comes back overwritten with the I²C offset, exactly as for VCP replies.
+    /// Here the length is not a known constant, so it is recovered by trying each candidate
+    /// until the checksum agrees — which also validates the reply.
+    private func capabilityFragment(at offset: UInt16) -> [UInt8]? {
+        for step in settleStep..<Self.settleLadder.count {
+            var request: [UInt8] = [0x83, 0xF3, UInt8(offset >> 8), UInt8(offset & 0xFF), 0]
+            request[4] = checksum(of: request[0...3], seed: displayAddress ^ hostAddress)
+
+            var wrote = false
+            for _ in 0..<2 {
+                if send(&request) == KERN_SUCCESS { wrote = true }
+                usleep(interWriteDelay)
+            }
+            guard wrote else { return nil }
+
+            usleep(Self.settleLadder[step] + 10_000)
+
+            var reply = [UInt8](repeating: 0, count: 64)
+            guard reply.withUnsafeMutableBytes({
+                avReadI2C?(avService, chipAddress, dataOffset, $0.baseAddress!, UInt32($0.count)) ?? KERN_FAILURE
+            }) == KERN_SUCCESS else { usleep(retryDelay); continue }
+
+            guard reply[0] == displayAddress, reply[2] == 0xE3 else { usleep(retryDelay); continue }
+
+            for payload in 3...38 where payload + 2 < reply.count {
+                var expected = replyChecksumSeed ^ displayAddress ^ UInt8(0x80 | payload)
+                for i in 2..<(2 + payload) { expected ^= reply[i] }
+                if expected == reply[2 + payload] {
+                    settleStep = step
+                    return Array(reply[5..<(2 + payload)])
+                }
+            }
+            usleep(retryDelay)
+        }
+        return nil
     }
 
     private func send(_ packet: inout [UInt8]) -> IOReturn {

@@ -17,6 +17,8 @@ struct ProbedDisplay {
     let volume: UInt16?
     let volumeMax: UInt16
     let muted: Bool?
+    /// What the monitor said about itself, when it answers VCP 0xF3 at all.
+    let capabilities: DisplayCapabilities?
     /// False when the kernel refuses to carry I²C traffic for this display at all. Such a
     /// display gets no slider — dragging one would silently do nothing.
     let busUsable: Bool
@@ -38,6 +40,7 @@ enum DisplayProber {
                     volume: nil,
                     volumeMax: 100,
                     muted: nil,
+                    capabilities: nil,
                     busUsable: BuiltInBrightness.isAvailable
                 )
             }
@@ -45,17 +48,23 @@ enum DisplayProber {
             guard let service = discovered.avService, ddcRuntimeAvailable else {
                 return ProbedDisplay(discovered: discovered, link: nil, brightness: nil,
                                      brightnessMax: 100, contrast: nil, contrastMax: 100,
-                                     volume: nil, volumeMax: 100, muted: nil, busUsable: false)
+                                     volume: nil, volumeMax: 100, muted: nil,
+                                     capabilities: nil, busUsable: false)
             }
 
-            let link = DDCLink(avService: service, label: discovered.framebufferKey)
+            // The EDID identity keys the cache: display IDs move between reboots, this does not.
+            let identity = discovered.cacheIdentity
+            let link = DDCLink(avService: service,
+                               label: discovered.framebufferKey,
+                               settleStep: CapabilityCache.settleIndex(for: identity) ?? 0)
             let brightnessProbe = link.probeSync(.brightness)
 
             // A refused bus is final: skip the contrast probe and offer no controls.
             if case .busUnavailable = brightnessProbe {
                 return ProbedDisplay(discovered: discovered, link: nil, brightness: nil,
                                      brightnessMax: 100, contrast: nil, contrastMax: 100,
-                                     volume: nil, volumeMax: 100, muted: nil, busUsable: false)
+                                     volume: nil, volumeMax: 100, muted: nil,
+                                     capabilities: nil, busUsable: false)
             }
 
             var brightness: UInt16?
@@ -64,9 +73,30 @@ enum DisplayProber {
                 brightness = current
                 brightnessMax = max
             }
-            let contrast = link.readSync(.contrast)
-            let volume = link.readSync(.speakerVolume)
-            let mute = link.readSync(.audioMute)
+            // Ask the monitor what it supports instead of guessing a fixed list. The string
+            // costs a dozen round trips, so it is read once per monitor and cached.
+            var capabilities = CapabilityCache.capabilities(for: identity)
+            if capabilities == nil, !CapabilityCache.isKnownUnsupported(for: identity) {
+                if let raw = link.readCapabilitiesSync(), let parsed = DisplayCapabilities(raw: raw) {
+                    capabilities = parsed
+                    CapabilityCache.store(parsed, for: identity)
+                } else {
+                    CapabilityCache.markUnsupported(for: identity)
+                }
+            }
+
+            // Probe only what the monitor claims. Without a capability string every code is
+            // tried, exactly as before.
+            func shouldProbe(_ code: VCPCode) -> Bool {
+                capabilities.map { $0.supports(code) } ?? true
+            }
+
+            let contrast = shouldProbe(.contrast) ? link.readSync(.contrast) : nil
+            let volume = shouldProbe(.speakerVolume) ? link.readSync(.speakerVolume) : nil
+            let mute = shouldProbe(.audioMute) ? link.readSync(.audioMute) : nil
+
+            CapabilityCache.storeSettleIndex(link.learnedSettleStep, for: identity)
+
             return ProbedDisplay(
                 discovered: discovered,
                 link: link,
@@ -77,6 +107,7 @@ enum DisplayProber {
                 volume: volume?.current,
                 volumeMax: volume?.max ?? 100,
                 muted: mute.map { $0.current == AudioMuteState.muted.rawValue },
+                capabilities: capabilities,
                 busUsable: true
             )
         }
@@ -104,7 +135,9 @@ final class ManagedDisplay: ObservableObject, Identifiable {
     let contrastMax: UInt16
     let contrastSupported: Bool
     let volumeMax: UInt16
-    /// Only displays that answer VCP 0x62 get audio controls; most monitors have no speakers.
+    /// What the monitor reported about itself, if anything.
+    let capabilities: DisplayCapabilities?
+    /// Only displays that offer VCP 0x62 get audio controls; most monitors have no speakers.
     let volumeSupported: Bool
     let muteSupported: Bool
 
@@ -134,10 +167,16 @@ final class ManagedDisplay: ObservableObject, Identifiable {
         self.serialText = discovered.serialText
         self.brightnessMax = probed.brightnessMax
         self.contrastMax = probed.contrastMax
+        // A monitor may list a feature yet refuse to report its value. Trust the claim: a
+        // slider that might work beats no slider at all.
+        self.capabilities = probed.capabilities
         self.contrastSupported = probed.contrast != nil
+            || probed.capabilities?.supports(.contrast) == true
         self.volumeMax = probed.volumeMax
         self.volumeSupported = probed.volume != nil
+            || probed.capabilities?.supports(.speakerVolume) == true
         self.muteSupported = probed.muted != nil
+            || probed.capabilities?.supports(.audioMute) == true
         self.readConfirmed = probed.brightness != nil
 
         if let link = probed.link, probed.busUsable {
@@ -193,7 +232,12 @@ final class ManagedDisplay: ObservableObject, Identifiable {
     var statusText: String {
         if busDidFail { return "Verbindung verloren" }
         switch backend {
-        case .ddc: return readConfirmed ? "DDC/CI verbunden" : "DDC/CI, keine Rückmeldung"
+        case .ddc:
+            let base = readConfirmed ? "DDC/CI verbunden" : "DDC/CI, keine Rückmeldung"
+            // Showing the reported MCCS version makes it visible that the monitor was asked
+            // what it can do, rather than assumed.
+            if let version = capabilities?.mccsVersion { return "\(base) · MCCS \(version)" }
+            return base
         case .builtIn: return "Internes Display"
         case .software: return "Softwaredimmung"
         case .unavailable: return "Nicht steuerbar"
