@@ -99,6 +99,11 @@ struct AboutView: View {
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
                     .padding(.top, 2)
+
+                Text("Zusätzlich lassen sich die Helligkeits- und Lautstärketasten der Tastatur belegen — im Menü einschaltbar, braucht die Berechtigung „Bedienungshilfen“.")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 28)

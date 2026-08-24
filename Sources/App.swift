@@ -37,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DockVisibility.apply()
         buildMainMenu()
         HotkeyManager.shared.installDefaults(controller: DisplayController.shared)
+        MediaKeyTap.shared.configure(controller: DisplayController.shared)
     }
 
     /// A gamma table outlives the process that set it, so it has to be handed back.

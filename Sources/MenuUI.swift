@@ -9,6 +9,8 @@ struct MenuContent: View {
     @State private var showContrast = UserDefaults.standard.bool(forKey: "showContrast")
     @State private var launchAtLogin = LoginItem.isEnabled
     @State private var showInDock = DockVisibility.isEnabled
+    @State private var mediaKeys = MediaKeyTap.isEnabled
+    @State private var mediaKeysBlocked = false
 
     private var controllable: [ManagedDisplay] { controller.controllableDisplays }
     private var unavailable: [ManagedDisplay] { controller.displays.filter { !$0.isControllable } }
@@ -78,6 +80,33 @@ struct MenuContent: View {
 
     private var footer: some View {
         VStack(alignment: .leading, spacing: 8) {
+            Toggle("Tasten der Tastatur verwenden", isOn: $mediaKeys)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .help("Helligkeits- und Lautstärketasten der Tastatur auf die Monitore legen. Braucht die Berechtigung „Bedienungshilfen“.")
+                .onChange(of: mediaKeys) { _, newValue in
+                    MediaKeyTap.isEnabled = newValue
+                    if newValue {
+                        if MediaKeyTap.shared.start() {
+                            mediaKeysBlocked = false
+                        } else {
+                            // No permission yet: prompt, and say so instead of failing silently.
+                            MediaKeyTap.requestPermission()
+                            mediaKeysBlocked = true
+                        }
+                    } else {
+                        MediaKeyTap.shared.stop()
+                        mediaKeysBlocked = false
+                    }
+                }
+
+            if mediaKeysBlocked {
+                Text("Dafür fehlt noch die Berechtigung: Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen → BrightnessBar aktivieren, dann die App neu starten.")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             Toggle("Softwaredimmung, wo DDC fehlt", isOn: $controller.softwareDimming)
                 .toggleStyle(.switch)
                 .controlSize(.small)
