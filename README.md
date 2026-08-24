@@ -75,7 +75,10 @@ im Detail; darunter lässt sich zwischen den angeschlossenen wechseln. Der Punkt
 Namen sagt, wie er angesteuert wird — grün heißt Backlight über DDC/CI, gelb heißt
 Softwaredimmung, rot heißt gar nicht steuerbar.
 
-Alle Schalter und eine Erklärung der Tastenkürzel stehen unter *Einstellungen …*.
+Alle Schalter und eine Erklärung der Tastenkürzel stehen unter *Einstellungen …*. Dort lässt
+sich auch die **Farbe der Regler** wählen — zehn Vorgaben oder eine eigene; voreingestellt
+ist die Akzentfarbe des Systems. Die Statuspunkte bleiben davon unberührt, weil grün, gelb
+und rot dort eine Bedeutung tragen.
 
 | Kürzel | Wirkung |
 |---|---|
@@ -238,6 +241,7 @@ macOS die Tabelle dabei verwirft.
 | `Sources/Hotkeys.swift` | globale Kurzbefehle (Carbon), LaunchAgent |
 | `Sources/MediaKeys.swift` | Event-Tap für die Helligkeits- und Lautstärketasten |
 | `Sources/MenuUI.swift` | SwiftUI-Menü, Monitorauswahl, eigener Regler |
+| `Sources/Appearance.swift` | wählbare Akzentfarbe, getrennt von den Statusfarben |
 | `Sources/SettingsWindow.swift` | Einstellungsfenster samt Erklärung der Kurzbefehle |
 | `Sources/AboutWindow.swift` | Info-Fenster und App-Metadaten |
 | `Sources/DockVisibility.swift` | Dock-Symbol ein- und ausschalten |
