@@ -1,0 +1,199 @@
+import SwiftUI
+import AppKit
+
+// MARK: - Settings window
+
+/// One reused window, like the About panel: opening twice raises the existing one.
+@MainActor
+final class SettingsWindowController {
+
+    static let shared = SettingsWindowController()
+
+    private var window: NSWindow?
+
+    private init() {}
+
+    func show() {
+        if let window {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        let hosting = NSHostingController(rootView: SettingsView(controller: DisplayController.shared))
+        let window = NSWindow(contentViewController: hosting)
+        window.title = "Einstellungen"
+        window.styleMask = [.titled, .closable]
+        window.isReleasedWhenClosed = false
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        self.window = window
+    }
+}
+
+struct SettingsView: View {
+
+    @ObservedObject var controller: DisplayController
+
+    @State private var softwareDimming = SoftwareDimmer.isEnabled
+    @State private var mediaKeys = MediaKeyTap.isEnabled
+    @State private var mediaKeysActive = MediaKeyTap.shared.isRunning
+    @State private var launchAtLogin = LoginItem.isEnabled
+    @State private var showInDock = DockVisibility.isEnabled
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            section("Steuerung") {
+                settingToggle(
+                    "Softwaredimmung, wo DDC fehlt",
+                    "Monitore, deren I²C-Kanal der Mac nicht erreicht, dunkeln über die Gamma-Kurve ab. Das Backlight bleibt dabei unverändert.",
+                    isOn: $softwareDimming
+                )
+                .onChange(of: softwareDimming) { _, newValue in
+                    controller.softwareDimming = newValue
+                }
+            }
+
+            section("Tastatur") {
+                settingToggle(
+                    "Tasten der Tastatur verwenden",
+                    "Legt die Helligkeits- und Lautstärketasten auf die Monitore. Braucht die Berechtigung „Bedienungshilfen“.",
+                    isOn: $mediaKeys
+                )
+                .onChange(of: mediaKeys) { _, newValue in
+                    MediaKeyTap.isEnabled = newValue
+                    if newValue {
+                        mediaKeysActive = MediaKeyTap.shared.start()
+                        if !mediaKeysActive { MediaKeyTap.requestPermission() }
+                    } else {
+                        MediaKeyTap.shared.stop()
+                        mediaKeysActive = false
+                    }
+                }
+
+                if mediaKeys {
+                    HStack(spacing: 7) {
+                        Circle()
+                            .fill(mediaKeysActive ? Color(red: 0.30, green: 0.80, blue: 0.36) : Theme.accent)
+                            .frame(width: 7, height: 7)
+                        Text(mediaKeysActive ? "Tasten sind aktiv" : "Berechtigung fehlt")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                        if !mediaKeysActive {
+                            Button("Bedienungshilfen öffnen") { MediaKeyTap.openAccessibilitySettings() }
+                                .buttonStyle(.link)
+                                .font(.system(size: 11))
+                        }
+                    }
+                    .padding(.leading, 2)
+                }
+            }
+
+            section("Start") {
+                settingToggle(
+                    "Beim Anmelden starten",
+                    "Legt einen LaunchAgent an, der auf den aktuellen Ort der App zeigt.",
+                    isOn: $launchAtLogin
+                )
+                .onChange(of: launchAtLogin) { _, newValue in LoginItem.setEnabled(newValue) }
+
+                settingToggle(
+                    "Im Dock anzeigen",
+                    "Normalerweise lebt die App nur in der Menüleiste.",
+                    isOn: $showInDock
+                )
+                .onChange(of: showInDock) { _, newValue in
+                    DockVisibility.isEnabled = newValue
+                    DockVisibility.apply()
+                }
+            }
+
+            Divider()
+
+            shortcuts
+        }
+        .padding(24)
+        .frame(width: 460)
+    }
+
+    // MARK: Pieces
+
+    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.system(size: 11, weight: .semibold))
+                .kerning(0.6)
+                .textCase(.uppercase)
+                .foregroundStyle(.secondary)
+            content()
+        }
+    }
+
+    private func settingToggle(_ title: String, _ explanation: String, isOn: Binding<Bool>) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Toggle(title, isOn: isOn)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .font(.system(size: 12))
+            Text(explanation)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var shortcuts: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Tastenkürzel")
+                .font(.system(size: 11, weight: .semibold))
+                .kerning(0.6)
+                .textCase(.uppercase)
+                .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 7) {
+                shortcut("⌥⌘↑", "Heller", "in 10-%-Schritten")
+                shortcut("⌥⌘↓", "Dunkler", "in 10-%-Schritten")
+                shortcut("⇧⌥⌘↑", "Heller, fein", "in 2-%-Schritten")
+                shortcut("⇧⌥⌘↓", "Dunkler, fein", "in 2-%-Schritten")
+            }
+
+            Text("Diese vier wirken immer, ohne Zusatzrechte. Sie regeln den Monitor, auf dem der Mauszeiger gerade steht — oder alle zugleich, wenn im Menü *Monitore koppeln* aktiv ist.")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if mediaKeys {
+                VStack(alignment: .leading, spacing: 7) {
+                    shortcut("F1 / F2", "Helligkeit", "Tasten der Tastatur")
+                    shortcut("Lautstärke", "Lautstärke und Stumm", "Tasten der Tastatur")
+                }
+                .padding(.top, 4)
+
+                Text("Reagiert eine dieser Tasten nicht, erzeugt die Tastatur dafür kein Ereignis — manche Herstellersoftware führt sie selbst aus. Dann hilft es, die Taste dort auf ⌥⌘↑ bzw. ⌥⌘↓ zu legen.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func shortcut(_ keys: String, _ title: String, _ detail: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text(keys)
+                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(Color.primary.opacity(0.08))
+                )
+                .frame(width: 96, alignment: .leading)
+            Text(title)
+                .font(.system(size: 12))
+            Text(detail)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 0)
+        }
+    }
+}

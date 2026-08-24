@@ -1,292 +1,432 @@
 import SwiftUI
 import AppKit
 
+// MARK: - Shared look
+
+enum Theme {
+    /// Taken from the app icon, so menu and icon read as one thing.
+    static let accent = Color(red: 0.98, green: 0.68, blue: 0.13)
+    static let rowIconWidth: CGFloat = 22
+    static let width: CGFloat = 320
+}
+
+extension ManagedDisplay.Health {
+    var color: Color {
+        switch self {
+        case .good: return Color(red: 0.30, green: 0.80, blue: 0.36)
+        case .partial: return Theme.accent
+        case .none: return Color(red: 0.85, green: 0.30, blue: 0.28)
+        }
+    }
+}
+
 // MARK: - Menu content
 
 struct MenuContent: View {
 
     @ObservedObject var controller: DisplayController
-    @State private var showContrast = UserDefaults.standard.bool(forKey: "showContrast")
-    @State private var launchAtLogin = LoginItem.isEnabled
-    @State private var showInDock = DockVisibility.isEnabled
-    @State private var mediaKeys = MediaKeyTap.isEnabled
     @State private var mediaKeysActive = MediaKeyTap.shared.isRunning
 
-    private var controllable: [ManagedDisplay] { controller.controllableDisplays }
-    private var unavailable: [ManagedDisplay] { controller.displays.filter { !$0.isControllable } }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            header
+        VStack(alignment: .leading, spacing: 0) {
+            if controller.displays.isEmpty {
+                emptyState
+            } else if let display = controller.selectedDisplay {
+                DisplayHeader(display: display)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 14)
+                    .padding(.bottom, 12)
 
-            if controller.isScanning && controller.displays.isEmpty {
-                HStack(spacing: 8) {
-                    ProgressView().controlSize(.small)
-                    Text("Displays werden gesucht …").foregroundStyle(.secondary)
+                separator
+
+                DisplayControls(display: display, controller: controller)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+
+                if controller.displays.count > 1 {
+                    separator
+                    monitorPicker
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 8)
                 }
+            }
+
+            separator
+            actions
+                .padding(.horizontal, 8)
                 .padding(.vertical, 6)
-            }
-
-            if controllable.count > 1 {
-                Toggle("Alle Displays koppeln", isOn: $controller.linkAll)
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
-            }
-
-            ForEach(controllable) { display in
-                DisplayRow(display: display, showContrast: showContrast, controller: controller)
-            }
-
-            if !unavailable.isEmpty {
-                Divider()
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Nicht steuerbar")
-                        .font(.system(size: 12, weight: .medium))
-                    ForEach(unavailable) { display in
-                        Text(display.displayLabel)
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                    }
-                    // One shared explanation: the cause is the same for every display here.
-                    Text("Dieser Anschluss leitet DDC/CI nicht durch. Adapter und Hubs zwischen Mac und Monitor sind die übliche Ursache — eine direkte DisplayPort- oder USB-C-Verbindung hilft. Sonst DDC/CI im Monitor-Menü aktivieren.")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 2)
-                }
-            }
-
-            Divider()
-            footer
         }
-        .padding(14)
-        .frame(width: 320)
+        .frame(width: Theme.width)
         .onAppear {
-            // Retry here: the permission is often granted while the app is already running.
-            mediaKeys = MediaKeyTap.isEnabled
+            // The permission is often granted while the app is already running.
             mediaKeysActive = MediaKeyTap.shared.refresh()
         }
     }
 
-    private var header: some View {
-        HStack {
-            Text("Helligkeit").font(.system(size: 13, weight: .semibold))
-            Spacer()
-            Button {
-                controller.rescan()
-            } label: {
-                Image(systemName: "arrow.clockwise")
-            }
-            .buttonStyle(.borderless)
-            .help("Displays neu einlesen")
-            .disabled(controller.isScanning)
-        }
+    private var separator: some View {
+        Rectangle()
+            .fill(Color.primary.opacity(0.10))
+            .frame(height: 1)
+            .padding(.horizontal, 16)
     }
 
-    private var footer: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Toggle("Tasten der Tastatur verwenden", isOn: $mediaKeys)
-                .toggleStyle(.switch)
-                .controlSize(.small)
-                .help("Helligkeits- und Lautstärketasten der Tastatur auf die Monitore legen. Braucht die Berechtigung „Bedienungshilfen“.")
-                .onChange(of: mediaKeys) { _, newValue in
-                    MediaKeyTap.isEnabled = newValue
-                    if newValue {
-                        mediaKeysActive = MediaKeyTap.shared.start()
-                        if !mediaKeysActive { MediaKeyTap.requestPermission() }
-                    } else {
-                        MediaKeyTap.shared.stop()
-                        mediaKeysActive = false
-                    }
-                }
-
-            // The state is shown rather than assumed: the tap can only be created once the
-            // Accessibility permission is in effect, and silence there is the worst outcome.
-            if mediaKeys {
-                if mediaKeysActive {
-                    Label("Tasten sind aktiv", systemImage: "checkmark.circle")
-                        .font(.system(size: 9))
-                        .foregroundStyle(.secondary)
-                } else {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("Berechtigung fehlt. In den Systemeinstellungen bei „Bedienungshilfen“ ein Häkchen vor BrightnessBar setzen — schon vorhandene Einträge notfalls mit „−“ entfernen und neu hinzufügen. Danach hier erneut das Menü öffnen.")
-                            .font(.system(size: 9))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Button("Bedienungshilfen öffnen") {
-                            MediaKeyTap.openAccessibilitySettings()
-                        }
-                        .buttonStyle(.borderless)
-                        .font(.system(size: 10))
-                    }
-                }
-            }
-
-            Toggle("Softwaredimmung, wo DDC fehlt", isOn: $controller.softwareDimming)
-                .toggleStyle(.switch)
-                .controlSize(.small)
-                .help("Für Monitore ohne erreichbaren DDC-Kanal: dunkelt das Bild per Gamma-Kurve ab, statt das Backlight zu regeln.")
-
-            Toggle("Kontrast anzeigen", isOn: $showContrast)
-                .toggleStyle(.switch)
-                .controlSize(.small)
-                .onChange(of: showContrast) { _, newValue in
-                    UserDefaults.standard.set(newValue, forKey: "showContrast")
-                }
-
-            Toggle("Beim Anmelden starten", isOn: $launchAtLogin)
-                .toggleStyle(.switch)
-                .controlSize(.small)
-                .onChange(of: launchAtLogin) { _, newValue in
-                    LoginItem.setEnabled(newValue)
-                }
-
-            Toggle("Im Dock anzeigen", isOn: $showInDock)
-                .toggleStyle(.switch)
-                .controlSize(.small)
-                .onChange(of: showInDock) { _, newValue in
-                    DockVisibility.isEnabled = newValue
-                    DockVisibility.apply()
-                }
-
-            Text("⌥⌘↑ / ⌥⌘↓ heller bzw. dunkler  ·  mit ⇧ in 2-%-Schritten")
-                .font(.system(size: 10))
+    private var emptyState: some View {
+        HStack(spacing: 8) {
+            ProgressView().controlSize(.small)
+            Text(controller.isScanning ? "Displays werden gesucht …" : "Kein Display gefunden")
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
-
-            HStack {
-                Button("Info") { AboutWindowController.shared.show() }
-                    .buttonStyle(.borderless)
-                    .font(.system(size: 11))
-                Spacer()
-                Button("Beenden") { NSApp.terminate(nil) }
-                    .buttonStyle(.borderless)
-                    .font(.system(size: 11))
-            }
         }
+        .padding(16)
     }
-}
 
-// MARK: - One display's controls
+    // MARK: Monitor picker
 
-struct DisplayRow: View {
+    private var monitorPicker: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Monitor auswählen")
+                .font(.system(size: 10, weight: .semibold))
+                .kerning(0.6)
+                .textCase(.uppercase)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 8)
+                .padding(.bottom, 4)
 
-    @ObservedObject var display: ManagedDisplay
-    let showContrast: Bool
-    @ObservedObject var controller: DisplayController
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                Text(display.displayLabel)
-                    .font(.system(size: 12, weight: .medium))
-                    .lineLimit(1)
-                if !display.readConfirmed, !display.isSoftwareDimmed {
-                    Image(systemName: "questionmark.circle")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                        .help("Der Monitor beantwortet keine DDC-Leseanfragen. Der angezeigte Wert ist der letzte gesetzte, Steuern funktioniert trotzdem.")
-                }
-                Spacer()
-                Text("\(display.brightnessPercent) %")
-                    .font(.system(size: 11, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-            }
-
-            if display.isSoftwareDimmed {
-                Text("Softwaredimmung — dunkelt das Bild ab, das Backlight bleibt unverändert.")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            } else if !display.readConfirmed {
-                Text("Keine DDC-Antwort — Schieben kann trotzdem funktionieren.")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            slider(
-                icon: "sun.max",
-                value: Binding(
-                    get: { display.brightness },
-                    set: { newValue in
-                        display.brightness = newValue
-                        display.applyBrightness()
-                        if controller.linkAll {
-                            let percent = display.brightness / Double(display.brightnessMax) * 100
-                            for other in controller.controllableDisplays where other.id != display.id {
-                                other.setPercent(percent)
-                            }
-                        }
-                    }
-                ),
-                range: 0...Double(display.brightnessMax)
-            )
-
-            if display.volumeSupported {
-                HStack(spacing: 6) {
-                    Text("Lautstärke").font(.system(size: 10)).foregroundStyle(.secondary)
-                    Spacer()
-                    Text(display.isMuted ? "stumm" : "\(display.volumePercent) %")
-                        .font(.system(size: 10, design: .rounded))
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
-                HStack(spacing: 8) {
-                    if display.muteSupported {
-                        Button {
-                            display.setMuted(!display.isMuted)
-                        } label: {
-                            Image(systemName: display.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                                .font(.system(size: 10))
-                                .frame(width: 12)
-                        }
-                        .buttonStyle(.borderless)
-                        .help(display.isMuted ? "Ton einschalten" : "Stummschalten")
-                    } else {
-                        Image(systemName: "speaker.wave.2.fill")
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 12)
-                    }
-                    Slider(
-                        value: Binding(
-                            get: { display.volume },
-                            set: { display.volume = $0; display.applyVolume() }
-                        ),
-                        in: 0...Double(display.volumeMax)
-                    )
-                    .disabled(display.isMuted)
-                }
-            }
-
-            if showContrast, display.contrastSupported {
-                HStack(spacing: 6) {
-                    Text("Kontrast").font(.system(size: 10)).foregroundStyle(.secondary)
-                    Spacer()
-                    Text("\(display.contrastPercent) %")
-                        .font(.system(size: 10, design: .rounded))
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
-                slider(
-                    icon: "circle.lefthalf.filled",
-                    value: Binding(
-                        get: { display.contrast },
-                        set: { display.contrast = $0; display.applyContrast() }
-                    ),
-                    range: 0...Double(display.contrastMax)
+            ForEach(controller.displays) { display in
+                MonitorRow(
+                    display: display,
+                    isSelected: display.id == controller.selectedDisplay?.id,
+                    action: { controller.selectedDisplayID = display.id }
                 )
             }
         }
     }
 
-    private func slider(icon: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary)
-            Slider(value: value, in: range)
+    // MARK: Bottom actions
+
+    private var actions: some View {
+        VStack(spacing: 1) {
+            if controller.controllableDisplays.count > 1 {
+                ActionRow(icon: "link", title: "Monitore koppeln") {
+                    Toggle("", isOn: $controller.linkAll)
+                        .toggleStyle(.switch)
+                        .controlSize(.mini)
+                        .labelsHidden()
+                }
+            }
+
+            if MediaKeyTap.isEnabled, !mediaKeysActive {
+                ActionRow(icon: "exclamationmark.triangle", title: "Tastenfreigabe fehlt", tint: Theme.accent) {
+                    EmptyView()
+                }
+                .onTapGesture { MediaKeyTap.openAccessibilitySettings() }
+            }
+
+            ActionRow(icon: "gearshape", title: "Einstellungen …", showsChevron: true) { EmptyView() }
+                .onTapGesture { SettingsWindowController.shared.show() }
+
+            ActionRow(icon: "info.circle", title: "Info") { EmptyView() }
+                .onTapGesture { AboutWindowController.shared.show() }
+
+            ActionRow(icon: "power", title: "BrightnessBar beenden") { EmptyView() }
+                .onTapGesture { NSApp.terminate(nil) }
         }
+    }
+}
+
+// MARK: - Header
+
+struct DisplayHeader: View {
+
+    @ObservedObject var display: ManagedDisplay
+
+    var body: some View {
+        HStack(spacing: 11) {
+            Image(systemName: "display")
+                .font(.system(size: 26, weight: .light))
+                .frame(width: 34)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(display.displayLabel)
+                    .font(.system(size: 14, weight: .semibold))
+                    .lineLimit(1)
+                Text(display.statusText)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 6)
+
+            Circle()
+                .fill(display.health.color)
+                .frame(width: 8, height: 8)
+        }
+    }
+}
+
+// MARK: - Sliders for one display
+
+struct DisplayControls: View {
+
+    @ObservedObject var display: ManagedDisplay
+    @ObservedObject var controller: DisplayController
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if display.isControllable {
+                ValueSlider(
+                    title: "Helligkeit",
+                    icon: "sun.max",
+                    percent: display.brightnessPercent,
+                    value: Binding(
+                        get: { display.brightness },
+                        set: { newValue in
+                            display.brightness = newValue
+                            display.applyBrightness()
+                            if controller.linkAll {
+                                let percent = display.brightness / Double(display.brightnessMax) * 100
+                                for other in controller.controllableDisplays where other.id != display.id {
+                                    other.setPercent(percent)
+                                }
+                            }
+                        }
+                    ),
+                    range: 0...Double(display.brightnessMax)
+                )
+
+                if display.contrastSupported {
+                    ValueSlider(
+                        title: "Kontrast",
+                        icon: "circle.righthalf.filled",
+                        percent: display.contrastPercent,
+                        value: Binding(
+                            get: { display.contrast },
+                            set: { display.contrast = $0; display.applyContrast() }
+                        ),
+                        range: 0...Double(display.contrastMax)
+                    )
+                }
+
+                if display.volumeSupported {
+                    // The mockup groups picture and sound apart; the hairline does that.
+                    Rectangle()
+                        .fill(Color.primary.opacity(0.10))
+                        .frame(height: 1)
+                        .padding(.vertical, 2)
+
+                    ValueSlider(
+                        title: "Lautstärke",
+                        icon: display.isMuted ? "speaker.slash" : "speaker.wave.2",
+                        percent: display.volumePercent,
+                        valueLabel: display.isMuted ? "stumm" : nil,
+                        value: Binding(
+                            get: { display.volume },
+                            set: { display.volume = $0; display.applyVolume() }
+                        ),
+                        range: 0...Double(display.volumeMax),
+                        disabled: display.isMuted
+                    )
+
+                    if display.muteSupported {
+                        HStack {
+                            Text("Stumm").font(.system(size: 12))
+                            Spacer()
+                            Toggle("", isOn: Binding(
+                                get: { display.isMuted },
+                                set: { display.setMuted($0) }
+                            ))
+                            .toggleStyle(.switch)
+                            .controlSize(.mini)
+                            .labelsHidden()
+                        }
+                    }
+                }
+
+                if display.isSoftwareDimmed {
+                    Text("Der Regler dunkelt das Bild ab. Das Backlight bleibt unverändert, weil dieser Anschluss DDC/CI nicht durchleitet.")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            } else {
+                Text("Dieser Anschluss leitet DDC/CI nicht durch. Adapter und Hubs zwischen Mac und Monitor sind die übliche Ursache — eine direkte DisplayPort- oder USB-C-Verbindung hilft.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+struct ValueSlider: View {
+
+    let title: String
+    let icon: String
+    let percent: Int
+    var valueLabel: String? = nil
+    let value: Binding<Double>
+    let range: ClosedRange<Double>
+    var disabled: Bool = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                Text(title).font(.system(size: 12))
+                Spacer()
+                Text(valueLabel ?? "\(percent) %")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
+            HStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 18)
+                TintedSlider(value: value, range: range, isEnabled: !disabled)
+                    .frame(height: 20)
+            }
+        }
+    }
+}
+
+// MARK: - Slider
+//
+// Hand-drawn rather than wrapped: SwiftUI's Slider ignores `.tint` for the filled track on
+// macOS, and NSSlider's `trackFillColor` only paints in an active window. Drawing it directly
+// keeps the colour identical everywhere — menu, screenshot, inactive window.
+
+struct TintedSlider: View {
+
+    let value: Binding<Double>
+    let range: ClosedRange<Double>
+    var isEnabled: Bool = true
+
+    private let trackHeight: CGFloat = 6
+    private let knobSize: CGFloat = 18
+
+    var body: some View {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            let travel = max(width - knobSize, 1)
+            let fraction = self.fraction
+            let knobCenter = knobSize / 2 + travel * fraction
+
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color.primary.opacity(0.16))
+                    .frame(height: trackHeight)
+
+                Capsule()
+                    .fill(isEnabled ? Theme.accent : Color.secondary.opacity(0.4))
+                    .frame(width: max(knobCenter, trackHeight), height: trackHeight)
+
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: knobSize, height: knobSize)
+                    .shadow(color: .black.opacity(0.25), radius: 1.5, y: 0.5)
+                    .offset(x: knobCenter - knobSize / 2)
+            }
+            .frame(height: knobSize)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { drag in
+                        guard isEnabled else { return }
+                        let position = (drag.location.x - knobSize / 2) / travel
+                        set(fraction: position)
+                    }
+            )
+        }
+        .frame(height: knobSize)
+        .opacity(isEnabled ? 1 : 0.5)
+    }
+
+    private var fraction: Double {
+        let span = range.upperBound - range.lowerBound
+        guard span > 0 else { return 0 }
+        return min(1, max(0, (value.wrappedValue - range.lowerBound) / span))
+    }
+
+    private func set(fraction: Double) {
+        let clamped = min(1, max(0, fraction))
+        value.wrappedValue = range.lowerBound + clamped * (range.upperBound - range.lowerBound)
+    }
+}
+
+// MARK: - Rows
+
+struct MonitorRow: View {
+
+    @ObservedObject var display: ManagedDisplay
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 11, weight: .semibold))
+                    .frame(width: 14)
+                    .opacity(isSelected ? 1 : 0)
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(display.displayLabel)
+                        .font(.system(size: 12))
+                        .lineLimit(1)
+                    if display.isSoftwareDimmed {
+                        Text("Softwaredimmung")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer(minLength: 6)
+
+                Circle()
+                    .fill(display.health.color)
+                    .frame(width: 7, height: 7)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isSelected ? Color.primary.opacity(0.10) : Color.clear)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct ActionRow<Accessory: View>: View {
+
+    let icon: String
+    let title: String
+    var tint: Color? = nil
+    var showsChevron: Bool = false
+    @ViewBuilder let accessory: () -> Accessory
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 13))
+                .foregroundStyle(tint ?? .secondary)
+                .frame(width: Theme.rowIconWidth)
+            Text(title)
+                .font(.system(size: 12))
+                .foregroundStyle(tint ?? .primary)
+            Spacer(minLength: 6)
+            accessory()
+            if showsChevron {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 7)
+        .contentShape(Rectangle())
     }
 }
