@@ -8,7 +8,9 @@ gar keinen Regler anbietet.
 > I²C channel is unreachable. UI is in German.*
 
 <p align="center">
-  <img src="docs/menu.png" width="320" alt="Menü mit Helligkeits-, Lautstärke- und Softwaredimmungs-Reglern">
+  <img src="docs/menu.png" width="320" alt="Menü: ein Monitor im Detail, darunter die Monitorauswahl mit Statuspunkten">
+  &nbsp;
+  <img src="docs/settings.png" width="380" alt="Einstellungsfenster mit erklärten Tastenkürzeln">
 </p>
 
 ## Worum es geht
@@ -68,7 +70,12 @@ nach `/Applications`. Selbst gebaut greift Gatekeeper gar nicht ein.
 
 ## Benutzung
 
-Klick auf das Sonnensymbol in der Menüleiste öffnet die Regler.
+Klick auf das Sonnensymbol in der Menüleiste öffnet die Regler. Das Menü zeigt einen Monitor
+im Detail; darunter lässt sich zwischen den angeschlossenen wechseln. Der Punkt hinter jedem
+Namen sagt, wie er angesteuert wird — grün heißt Backlight über DDC/CI, gelb heißt
+Softwaredimmung, rot heißt gar nicht steuerbar.
+
+Alle Schalter und eine Erklärung der Tastenkürzel stehen unter *Einstellungen …*.
 
 | Kürzel | Wirkung |
 |---|---|
@@ -230,7 +237,8 @@ macOS die Tabelle dabei verwirft.
 | `Sources/BuiltInBrightness.swift` | `DisplayServices`-Pfad für interne und Apple-Displays |
 | `Sources/Hotkeys.swift` | globale Kurzbefehle (Carbon), LaunchAgent |
 | `Sources/MediaKeys.swift` | Event-Tap für die Helligkeits- und Lautstärketasten |
-| `Sources/MenuUI.swift` | SwiftUI-Menü |
+| `Sources/MenuUI.swift` | SwiftUI-Menü, Monitorauswahl, eigener Regler |
+| `Sources/SettingsWindow.swift` | Einstellungsfenster samt Erklärung der Kurzbefehle |
 | `Sources/AboutWindow.swift` | Info-Fenster und App-Metadaten |
 | `Sources/DockVisibility.swift` | Dock-Symbol ein- und ausschalten |
 | `Sources/App.swift` | `MenuBarExtra`-Einstiegspunkt, Programmmenü |

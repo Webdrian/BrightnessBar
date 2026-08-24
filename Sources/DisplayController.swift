@@ -189,6 +189,31 @@ final class ManagedDisplay: ObservableObject, Identifiable {
         return false
     }
 
+    /// How this display is being driven, in one short line for the menu header.
+    var statusText: String {
+        if busDidFail { return "Verbindung verloren" }
+        switch backend {
+        case .ddc: return readConfirmed ? "DDC/CI verbunden" : "DDC/CI, keine Rückmeldung"
+        case .builtIn: return "Internes Display"
+        case .software: return "Softwaredimmung"
+        case .unavailable: return "Nicht steuerbar"
+        }
+    }
+
+    /// Green when the backlight itself is being driven, amber when only the image is, red
+    /// when nothing works. The dot carries this at a glance in the monitor list.
+    enum Health { case good, partial, none }
+
+    var health: Health {
+        if busDidFail { return .none }
+        switch backend {
+        case .ddc: return readConfirmed ? .good : .partial
+        case .builtIn: return .good
+        case .software: return .partial
+        case .unavailable: return .none
+        }
+    }
+
     var brightnessPercent: Int {
         guard brightnessMax > 0 else { return 0 }
         return Int((brightness / Double(brightnessMax) * 100).rounded())
@@ -317,6 +342,10 @@ final class DisplayController: ObservableObject {
         }
     }
 
+    /// Which display the detail section shows. Unset means "whichever one the pointer is on",
+    /// which is the right guess until the user makes a choice of their own.
+    @Published var selectedDisplayID: CGDirectDisplayID?
+
     private var rescanWorkItem: DispatchWorkItem?
 
     init() {
@@ -364,6 +393,13 @@ final class DisplayController: ObservableObject {
             return match
         }
         return controllableDisplays.first { CGDisplayIsMain($0.id) != 0 } ?? controllableDisplays.first
+    }
+
+    var selectedDisplay: ManagedDisplay? {
+        if let id = selectedDisplayID, let match = displays.first(where: { $0.id == id }) {
+            return match
+        }
+        return displayUnderCursor() ?? controllableDisplays.first ?? displays.first
     }
 
     /// The display the volume keys act on: the one under the pointer when it has speakers,
