@@ -1,0 +1,8 @@
+# Build-Ergebnis: wird von ./build.sh erzeugt, gehört nicht ins Repo
+BrightnessBar.app/
+*.zip
+
+# Zwischenstufen der Icon-Erzeugung
+*.iconset/
+
+.DS_Store
