@@ -28,8 +28,21 @@ else
   echo "   Hinweis: Resources/AppIcon.icns fehlt — ./Tools/make-icon.sh erzeugt es"
 fi
 
-echo "==> Signiere ad-hoc"
-codesign --force --deep --sign - "$BUNDLE"
+# A stable signing identity matters for more than tidiness: macOS pins the Accessibility
+# permission to the code signature. With an ad-hoc signature that pin is the binary's own
+# hash, so every rebuild silently invalidates the grant. A self-signed certificate gives a
+# designated requirement of "this bundle ID, signed by this certificate", which survives
+# rebuilds. Create one with Tools/make-signing-identity.sh; without it, ad-hoc still works.
+IDENTITY="BrightnessBar Self-Signed"
+if security find-identity -p codesigning 2>/dev/null | grep -q "$IDENTITY"; then
+  echo "==> Signiere mit \"$IDENTITY\""
+  codesign --force --deep --sign "$IDENTITY" "$BUNDLE"
+else
+  echo "==> Signiere ad-hoc (kein eigenes Zertifikat gefunden)"
+  echo "    Hinweis: ./Tools/make-signing-identity.sh erzeugt eines. Ohne es verliert die App"
+  echo "    ihre Bedienungshilfen-Freigabe bei jedem Neubau."
+  codesign --force --deep --sign - "$BUNDLE"
+fi
 
 echo "==> Fertig: $(pwd)/$BUNDLE"
 

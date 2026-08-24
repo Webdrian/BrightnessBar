@@ -87,6 +87,9 @@ final class HotkeyManager {
     }
 
     fileprivate func fire(_ id: UInt32) {
+        if MediaKeyTap.isLogging {
+            DiagLog.write("Kurzbefehl ausgelöst id=\(id) (\(actions[id] == nil ? "unbekannt" : "behandelt"))")
+        }
         actions[id]?()
     }
 }

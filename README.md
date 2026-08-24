@@ -96,15 +96,43 @@ Das Menü zeigt danach an, ob die Tasten tatsächlich aktiv sind, und versucht b
 Öffnen erneut, den Tap zu erzeugen — eine nachträglich erteilte Berechtigung greift also
 ohne Neustart.
 
-Zwei Fallstricke:
+**Ein vorhandener Eintrag in der Liste bedeutet nicht, dass er gilt.** Die Berechtigung hängt
+an der Code-Signatur. Ist die App nur ad-hoc signiert, lautet die hinterlegte Bedingung
+„genau dieses Binary", und jeder Neubau macht sie still ungültig — der Eintrag bleibt sichtbar
+stehen und wirkt trotzdem nicht. Abhilfe: `./Tools/make-signing-identity.sh` einmal ausführen
+(siehe unten), oder nach jedem Update den Eintrag mit „−" entfernen und neu hinzufügen.
 
-* **Ein vorhandener Eintrag in der Liste bedeutet nicht, dass er gilt.** Die Berechtigung
-  hängt an der Code-Signatur; weil die App nur ad-hoc signiert ist, ändert sich diese bei
-  jedem Neubau. Nach einem Update passt ein alter Eintrag also nicht mehr — dann in der
-  Liste mit „−" entfernen und die App neu hinzufügen.
-* Ob es funktioniert, verrät auch das Log beim Start:
-  `log stream --predicate 'process == "BrightnessBar"'` oder ein Start direkt aus dem
-  Terminal zeigt `Bedienungshilfen=1, Tap aktiv=1`, wenn alles sitzt.
+### Wenn eine Taste gar nichts auslöst
+
+Nicht jede Tastatur schickt ihre Sondertasten durch macOS' Ereignissystem. Auf dem
+Entwicklungsrechner (Logitech MX Keys Mac mit Logi Options+) kam „Helligkeit dunkler"
+zuverlässig an, „Helligkeit heller" dagegen **kein einziges Mal** — nicht abgefangen,
+sondern gar nicht erst erzeugt. Die Herstellersoftware führt solche Tasten teils selbst aus,
+unterhalb der Ebene, auf der ein Event-Tap arbeitet. Dagegen kann keine App etwas
+ausrichten.
+
+Der Ausweg führt über die Herstellersoftware selbst: dort die Taste auf den Tastenanschlag
+`⌥⌘↑` bzw. `⌥⌘↓` legen. Den erzeugt sie dann selbst, und BrightnessBar greift ihn als
+normalen Kurzbefehl ab.
+
+Beim Nachmessen fiel noch eine Kuriosität derselben Tastatur auf: sie meldet zu jeder
+Medientaste ein `NX_DEVICELCMDKEYMASK`-Bit mit, wodurch macOS eine gedrückte Command-Taste
+anzeigt, die niemand berührt hat. Die App wertet für Medientasten deshalb nur `⌥` aus und
+ignoriert die übrigen Modifier.
+
+### Diagnose
+
+Bei Zweifeln, ob eine Taste überhaupt ankommt:
+
+```bash
+defaults write de.webdrian.brightnessbar logMediaKeys -bool true
+# App neu starten, Tasten drücken, dann:
+cat ~/Library/Logs/BrightnessBar-diag.log
+defaults write de.webdrian.brightnessbar logMediaKeys -bool false
+```
+
+Protokolliert werden Medientasten-Codes und **ausschließlich** die Funktionstasten F1-F12 —
+nichts, woraus sich Getipptes rekonstruieren ließe.
 
 Mit gehaltenem `⌥` gibt die App die Tasten an macOS durch, damit `⌥` + Lautstärke weiterhin
 die Toneinstellungen öffnet.
@@ -147,6 +175,31 @@ Was hilft:
 * **DDC/CI im OSD-Menü aktivieren.** Beim U2719D unter *Menu → Others → DDC/CI*. Das allein
   reicht aber nicht, wenn schon die Strecke den Kanal nicht führt.
 
+## Signatur und Berechtigungen
+
+macOS knüpft die Bedienungshilfen-Freigabe an die Code-Signatur. Bei ad-hoc-Signierung ist
+das der Hash des Binaries selbst — jeder Neubau macht die Freigabe also ungültig, ohne dass
+man es sieht. Ein einmalig erzeugtes, selbst signiertes Zertifikat löst das:
+
+```bash
+./Tools/make-signing-identity.sh
+tccutil reset Accessibility de.webdrian.brightnessbar
+./build.sh --install
+```
+
+Danach lautet die hinterlegte Bedingung `identifier "de.webdrian.brightnessbar" and
+certificate root = H"…"` statt eines Binary-Hashes, und die Freigabe übersteht jeden Neubau.
+`build.sh` findet das Zertifikat von selbst und fällt ohne es auf ad-hoc zurück.
+
+Gatekeeper wird davon **nicht** besser — dafür braucht es eine Developer-ID und
+Notarisierung. Nur die Berechtigung wird stabil.
+
+Wieder entfernen:
+
+```bash
+security delete-identity -c "BrightnessBar Self-Signed"
+```
+
 ## Softwaredimmung
 
 Für Monitore aus Fall 3 skaliert die App die Übertragungsfunktion des Displays
@@ -182,6 +235,7 @@ macOS die Tabelle dabei verwirft.
 | `Sources/DockVisibility.swift` | Dock-Symbol ein- und ausschalten |
 | `Sources/App.swift` | `MenuBarExtra`-Einstiegspunkt, Programmmenü |
 | `Tools/make-icon.sh` | erzeugt `Resources/AppIcon.icns` aus Code |
+| `Tools/make-signing-identity.sh` | erzeugt das selbst signierte Zertifikat für stabile Berechtigungen |
 
 ## Technische Notizen
 
@@ -229,11 +283,9 @@ bleibt stabil. Zwei DELL U2719D hinter Wandlern: über DDC nicht erreichbar, lau
 Softwaredimmung.
 
 Der `DisplayServices`-Pfad für interne Panels ist implementiert, aber **ungeprüft** — ein Mac
-Studio hat kein internes Display. Ebenfalls ungeprüft ist die *Zustellung* der Tastendrücke:
-weder die Kurzbefehle noch der Medientasten-Tap ließen sich ohne echten Tastendruck
-auslösen. Geprüft ist jeweils alles dahinter — die Registrierung der Kurzbefehle beim System,
-die Dekodierung der Medientasten-Events in 20 Varianten und die vollständige Kette bis zur
-Hardware.
+Studio hat kein internes Display. Kurzbefehle und Medientasten sind inzwischen am echten Gerät bestätigt: `⌥⌘↑`/`⌥⌘↓` lösen
+aus und werden verarbeitet, Lautstärke und Stummschaltung laufen über die Tastatur. Die
+Helligkeitstasten hängen von der Tastatur ab — siehe „Wenn eine Taste gar nichts auslöst".
 
 ## Autor
 

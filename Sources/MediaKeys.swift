@@ -10,6 +10,30 @@ import ApplicationServices
 // requires Accessibility permission. Everything else in this app works without permissions, so
 // this is deliberately opt-in.
 
+/// Diagnostic output goes to a file: NSLog from this app does not reach the unified log,
+/// which makes `log show` useless for troubleshooting it.
+enum DiagLog {
+
+    static let url = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent("Library/Logs/BrightnessBar-diag.log")
+
+    static func write(_ message: String) {
+        let line = "\(Date().formatted(date: .omitted, time: .standard))  \(message)\n"
+        guard let data = line.data(using: .utf8) else { return }
+        if let handle = try? FileHandle(forWritingTo: url) {
+            defer { try? handle.close() }
+            _ = try? handle.seekToEnd()
+            try? handle.write(contentsOf: data)
+        } else {
+            try? data.write(to: url)
+        }
+    }
+}
+
+/// F1-F12 — the only ordinary keys the diagnostic mode looks at. Outside the actor-isolated
+/// class so the tap callback can read it without hopping.
+let functionKeyCodes: Set<UInt16> = [122, 120, 99, 118, 96, 97, 98, 100, 101, 109, 103, 111]
+
 /// Key identities from IOKit's `ev_keymap.h`.
 enum MediaKey: Int32 {
     case soundUp = 0
@@ -57,6 +81,15 @@ final class MediaKeyTap {
 
     static var hasPermission: Bool { AXIsProcessTrusted() }
 
+    /// Diagnostic logging, switched on with
+    /// `defaults write de.webdrian.brightnessbar logMediaKeys -bool true`.
+    ///
+    /// Deliberately narrow: system-defined media keys are logged by key code, and ordinary
+    /// key presses only when they are a function key. Nothing that could reconstruct typed
+    /// text is ever recorded.
+    static var isLogging: Bool { UserDefaults.standard.bool(forKey: "logMediaKeys") }
+
+
     var isRunning: Bool { tap != nil }
 
     func configure(controller: DisplayController) {
@@ -90,7 +123,10 @@ final class MediaKeyTap {
     func start() -> Bool {
         guard tap == nil else { return true }
 
-        let mask = CGEventMask(1 << 14)   // NSEvent.EventType.systemDefined
+        // Bit 14 is NSSystemDefined. In diagnostic mode bit 10 (keyDown) is added, to find out
+        // whether a keyboard sends brightness as a media key at all — some do not.
+        var mask = CGEventMask(1 << 14)
+        if Self.isLogging { mask |= CGEventMask(1 << 10) }
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
             place: .headInsertEventTap,
@@ -182,8 +218,34 @@ private func mediaKeyTapCallback(type: CGEventType, event: CGEvent) -> Unmanaged
         return passThrough
     }
 
-    guard let nsEvent = NSEvent(cgEvent: event),
-          nsEvent.type == .systemDefined,
+    guard let nsEvent = NSEvent(cgEvent: event) else { return passThrough }
+
+    if MainActor.assumeIsolated({ MediaKeyTap.isLogging }) {
+        if nsEvent.type == .keyDown, functionKeyCodes.contains(nsEvent.keyCode) {
+            var mods: [String] = []
+            if nsEvent.modifierFlags.contains(.command) { mods.append("cmd") }
+            if nsEvent.modifierFlags.contains(.option) { mods.append("alt") }
+            if nsEvent.modifierFlags.contains(.control) { mods.append("ctrl") }
+            if nsEvent.modifierFlags.contains(.shift) { mods.append("shift") }
+            if nsEvent.modifierFlags.contains(.function) { mods.append("fn") }
+            DiagLog.write("Funktionstaste keyCode=\(nsEvent.keyCode) mods=[\(mods.joined(separator: ","))]")
+        } else if nsEvent.type == .systemDefined, nsEvent.subtype.rawValue == 8 {
+            let code = (nsEvent.data1 & 0xFFFF_0000) >> 16
+            let state = (nsEvent.data1 & 0xFF00) >> 8
+            var mods: [String] = []
+            if nsEvent.modifierFlags.contains(.command) { mods.append("cmd") }
+            if nsEvent.modifierFlags.contains(.option) { mods.append("alt") }
+            if nsEvent.modifierFlags.contains(.control) { mods.append("ctrl") }
+            if nsEvent.modifierFlags.contains(.shift) { mods.append("shift") }
+            if nsEvent.modifierFlags.contains(.function) { mods.append("fn") }
+            DiagLog.write("Medientaste code=\(code) state=0x\(String(state, radix: 16)) " +
+                          "mods=[\(mods.joined(separator: ","))] " +
+                          "raw=0x\(String(nsEvent.modifierFlags.rawValue, radix: 16))")
+        }
+    }
+
+    // keyDown is only ever observed for diagnostics, never swallowed.
+    guard nsEvent.type == .systemDefined,
           nsEvent.subtype.rawValue == 8,
           let mediaKey = MediaKeyEvent(data1: nsEvent.data1)
     else { return passThrough }
