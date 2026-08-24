@@ -27,6 +27,7 @@ Lautstärke.
 * Helligkeit und Kontrast pro Monitor, direkt am Backlight
 * Lautstärke und Stummschaltung bei Monitoren mit Lautsprechern
 * Globale Tastenkürzel, die auf den Monitor unter dem Mauszeiger wirken
+* Optional die Helligkeits- und Lautstärketasten der Tastatur
 * Mehrere Monitore koppeln und gemeinsam regeln
 * Softwaredimmung als Fallback, wenn der DDC-Kanal nicht erreichbar ist
 * Anmeldestart, optionales Dock-Symbol, Info-Fenster
@@ -77,6 +78,29 @@ Klick auf das Sonnensymbol in der Menüleiste öffnet die Regler.
 Die Kürzel wirken auf den Monitor, auf dem der Mauszeiger gerade steht — bei mehreren
 Bildschirmen also auf den, an dem man arbeitet. Ist *Alle Displays koppeln* aktiv, wirken
 sie auf alle steuerbaren Monitore gleichzeitig.
+
+### Tasten der Tastatur
+
+Die Helligkeits- und Lautstärketasten der Tastatur lassen sich auf die Monitore legen —
+Schalter *Tasten der Tastatur verwenden* im Menü. Sie regeln dann in Sechzehntel-Schritten,
+so wie macOS es bei internen Displays tut, und die Stummschalttaste schaltet den Monitorton.
+
+Das lohnt besonders bei Monitorlautsprechern über DisplayPort oder HDMI: solche Geräte
+melden macOS oft überhaupt keine Lautstärkeregelung — dann zeigen die Tasten nur das
+durchgestrichene Lautsprechersymbol und tun nichts. Über DDC funktioniert es trotzdem.
+
+Dafür braucht die App eine Ausnahme unter *Systemeinstellungen → Datenschutz & Sicherheit →
+Bedienungshilfen*, weil Tastendrücke nur über einen Event-Tap abzufangen sind. Deshalb ist
+die Funktion **standardmäßig aus** — alles andere in dieser App läuft ohne Berechtigungen.
+Zwei Dinge dazu:
+
+* Nach dem Erteilen muss die App **neu gestartet** werden.
+* Die Berechtigung hängt an der Code-Signatur. Weil die App nur ad-hoc signiert ist, ändert
+  sich diese bei **jedem Neubau** — nach `./build.sh` muss die Ausnahme also erneut erteilt
+  werden. Bei der geladenen Release-Version bleibt sie bestehen.
+
+Mit gehaltenem `⌥` gibt die App die Tasten an macOS durch, damit `⌥` + Lautstärke weiterhin
+die Toneinstellungen öffnet.
 
 *Beim Anmelden starten* legt einen LaunchAgent unter
 `~/Library/LaunchAgents/de.webdrian.brightnessbar.agent.plist` an. Der speichert den
@@ -145,6 +169,7 @@ macOS die Tabelle dabei verwirft.
 | `Sources/SoftwareDimming.swift` | Gamma-Fallback für Displays ohne erreichbaren DDC-Kanal |
 | `Sources/BuiltInBrightness.swift` | `DisplayServices`-Pfad für interne und Apple-Displays |
 | `Sources/Hotkeys.swift` | globale Kurzbefehle (Carbon), LaunchAgent |
+| `Sources/MediaKeys.swift` | Event-Tap für die Helligkeits- und Lautstärketasten |
 | `Sources/MenuUI.swift` | SwiftUI-Menü |
 | `Sources/AboutWindow.swift` | Info-Fenster und App-Metadaten |
 | `Sources/DockVisibility.swift` | Dock-Symbol ein- und ausschalten |
@@ -178,6 +203,13 @@ Schreibvorgänge werden zusammengefasst: beim Ziehen eines Reglers geht nur der 
 neueste Wert auf den Bus, damit der I²C-Kanal nicht überläuft. 31 Slider-Updates in 0,38 s
 landeten im Test korrekt auf dem Endwert.
 
+Die Medientasten kommen nicht als normale Tastendrücke an, sondern als
+`NSSystemDefined`-Events mit Subtype 8. Die Tastenidentität steckt in `data1`: Tastencode in
+den oberen 16 Bit, darunter der Tastenzustand in Bit 8-15 (`0x0A` heißt gedrückt) und das
+Wiederholungs-Flag in Bit 0. Ein `CGEvent`-Tap mit `.defaultTap` kann sie nicht nur lesen,
+sondern auch schlucken — nötig, damit macOS nicht zusätzlich reagiert. Wird eine Taste nicht
+behandelt, geht sie unverändert weiter.
+
 Beim Probing wird zwischen „Monitor schweigt" und „Kanal nicht verfügbar" unterschieden
 (`DDCProbeResult`). Nur der zweite Fall führt zur Softwaredimmung, und er wird nicht
 wiederholt — Retries können daran nichts ändern.
@@ -190,8 +222,11 @@ bleibt stabil. Zwei DELL U2719D hinter Wandlern: über DDC nicht erreichbar, lau
 Softwaredimmung.
 
 Der `DisplayServices`-Pfad für interne Panels ist implementiert, aber **ungeprüft** — ein Mac
-Studio hat kein internes Display. Ebenfalls ungeprüft ist die *Zustellung* der
-Tastenkombinationen; ihre Registrierung beim System ist nachweislich erfolgreich.
+Studio hat kein internes Display. Ebenfalls ungeprüft ist die *Zustellung* der Tastendrücke:
+weder die Kurzbefehle noch der Medientasten-Tap ließen sich ohne echten Tastendruck
+auslösen. Geprüft ist jeweils alles dahinter — die Registrierung der Kurzbefehle beim System,
+die Dekodierung der Medientasten-Events in 20 Varianten und die vollständige Kette bis zur
+Hardware.
 
 ## Autor
 

@@ -247,6 +247,14 @@ final class ManagedDisplay: ObservableObject, Identifiable {
         link.schedule(.audioMute, value: (muted ? AudioMuteState.muted : .unmuted).rawValue)
     }
 
+    /// Volume in sixteenths of full scale — the step size macOS itself uses for its keys.
+    func stepVolume(sixteenths: Int) {
+        guard volumeSupported else { return }
+        let step = Double(volumeMax) / 16
+        volume = max(0, min(Double(volumeMax), (volume + step * Double(sixteenths)).rounded()))
+        applyVolume()
+    }
+
     /// Nudges brightness by a percentage of full scale — used by the global hotkeys.
     func step(percent: Int) {
         let delta = Double(brightnessMax) * Double(percent) / 100
@@ -356,6 +364,17 @@ final class DisplayController: ObservableObject {
             return match
         }
         return controllableDisplays.first { CGDisplayIsMain($0.id) != 0 } ?? controllableDisplays.first
+    }
+
+    /// The display the volume keys act on: the one under the pointer when it has speakers,
+    /// otherwise the only display that has any. Most setups have exactly one candidate.
+    func displayForVolume() -> ManagedDisplay? {
+        let candidates = controllableDisplays.filter(\.volumeSupported)
+        guard !candidates.isEmpty else { return nil }
+        if let under = displayUnderCursor(), candidates.contains(where: { $0.id == under.id }) {
+            return under
+        }
+        return candidates.first
     }
 
     func step(percent: Int) {
