@@ -151,6 +151,38 @@ die Toneinstellungen öffnet.
 `~/Library/LaunchAgents/de.webdrian.brightnessbar.agent.plist` an. Der speichert den
 absoluten Pfad zur App: erst an den endgültigen Ort verschieben, dann aktivieren.
 
+## Wie ein Monitor erkannt wird
+
+Nichts davon ist auf ein bestimmtes Gerät zugeschnitten. Die App findet Displays generisch
+über CoreGraphics und ordnet sie über die EDID-Daten der IORegistry zu; DDC/CI ist ein
+VESA-Standard, und die verwendeten VCP-Codes sind die Standardcodes. Maximalwerte werden vom
+Monitor **gelesen**, nicht angenommen — ein Gerät, das intern mit 0-255 arbeitet, wird
+dadurch richtig behandelt.
+
+Darüber hinaus fragt die App den Monitor, **was er kann**: VCP `0xF3` liefert eine
+Selbstauskunft, aus der hervorgeht, welche Funktionen er implementiert.
+
+```
+(prot(monitor)type(lcd)model(UN880)cmds(01 02 03 0C E3 F3)
+ vcp(02 04 05 08 10 12 14(05 08 0B) 16 18 1A 52 60(11 12 0F 10) … 62 8D …)
+ mccs_ver(2.1))
+```
+
+Regler erscheinen daraufhin genau für die gemeldeten Funktionen, statt für eine fest
+verdrahtete Liste. Meldet ein Monitor eine Funktion, verweigert aber die Werteabfrage, wird
+der Regler trotzdem angeboten — ein Regler, der vielleicht wirkt, ist besser als keiner.
+Antwortet ein Gerät gar nicht auf `0xF3`, fällt die App auf direktes Durchprobieren zurück.
+
+Auch das Timing ist nicht fest: Monitore unterscheiden sich um mehr als eine Größenordnung
+darin, wie lange sie für eine Antwort brauchen. Statt einer eingemessenen Konstante
+durchläuft die App eine Leiter von 40 bis 320 ms, bis das Gerät antwortet, und merkt sich die
+Stufe. Selbstauskunft und Timing werden pro Monitor über die EDID-Identität zwischengespeichert,
+nicht über die Display-ID, die sich zwischen Neustarts ändert — der erste Kontakt kostete im
+Test 2,0 s, jeder weitere 0,7 s.
+
+**Voraussetzung ist Apple Silicon.** Der hier verwendete Weg über `IOAVService` existiert auf
+Intel-Macs nicht; dort liefe DDC über `IOFramebuffer`/`IOI2C`, was nicht implementiert ist.
+
 ## Welche Monitore funktionieren
 
 Die App unterscheidet drei Fälle, weil sie sehr unterschiedlich zu behandeln sind.
@@ -235,6 +267,7 @@ macOS die Tabelle dabei verwirft.
 |---|---|
 | `Sources/DDC.swift` | DDC/CI über `IOAVService`: Paketformat, Prüfsummen, Timing, Coalescing |
 | `Sources/DisplayRegistry.swift` | ordnet CoreGraphics-Displays über EDID und DCP-Instanz den I²C-Kanälen zu |
+| `Sources/Capabilities.swift` | liest und deutet die Selbstauskunft des Monitors, samt Cache |
 | `Sources/DisplayController.swift` | Display-Modell, Probing, Hotplug- und Aufwach-Behandlung |
 | `Sources/SoftwareDimming.swift` | Gamma-Fallback für Displays ohne erreichbaren DDC-Kanal |
 | `Sources/BuiltInBrightness.swift` | `DisplayServices`-Pfad für interne und Apple-Displays |

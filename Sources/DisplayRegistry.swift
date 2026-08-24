@@ -61,6 +61,12 @@ struct DiscoveredDisplay {
     let framebufferKey: String
     let isBuiltIn: Bool
     let avService: CFTypeRef?
+
+    /// Stable across reboots and reconnections, unlike `displayID` — used to key everything
+    /// remembered about this particular monitor.
+    var cacheIdentity: String {
+        serialText.isEmpty ? name : "\(name).\(serialText)"
+    }
 }
 
 enum DisplayRegistry {
