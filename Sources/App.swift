@@ -38,10 +38,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         buildMainMenu()
         HotkeyManager.shared.installDefaults(controller: DisplayController.shared)
         MediaKeyTap.shared.configure(controller: DisplayController.shared)
-        NSLog("BrightnessBar: Medientasten eingeschaltet=%d, Bedienungshilfen=%d, Tap aktiv=%d",
-              MediaKeyTap.isEnabled ? 1 : 0,
-              MediaKeyTap.hasPermission ? 1 : 0,
-              MediaKeyTap.shared.isRunning ? 1 : 0)
+        if MediaKeyTap.isLogging {
+            DiagLog.write("--- Start: eingeschaltet=\(MediaKeyTap.isEnabled) " +
+                          "Bedienungshilfen=\(MediaKeyTap.hasPermission) " +
+                          "Tap=\(MediaKeyTap.shared.isRunning)")
+        }
     }
 
     /// A gamma table outlives the process that set it, so it has to be handed back.
