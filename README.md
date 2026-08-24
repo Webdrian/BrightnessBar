@@ -193,6 +193,10 @@ Der `DisplayServices`-Pfad für interne Panels ist implementiert, aber **ungepr�
 Studio hat kein internes Display. Ebenfalls ungeprüft ist die *Zustellung* der
 Tastenkombinationen; ihre Registrierung beim System ist nachweislich erfolgreich.
 
+## Autor
+
+© 2026 Webdrian — [webdrian.de](https://webdrian.de)
+
 ## Lizenz
 
 MIT — siehe [LICENSE](LICENSE).

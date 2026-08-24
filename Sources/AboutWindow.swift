@@ -18,6 +18,13 @@ enum AppInfo {
     }
 
     static let repositoryURL = URL(string: "https://github.com/Webdrian/BrightnessBar")!
+    static let websiteURL = URL(string: "https://webdrian.de")!
+
+    /// Read from the bundle rather than hard-coded, so the year lives in one place.
+    static var copyright: String {
+        Bundle.main.object(forInfoDictionaryKey: "NSHumanReadableCopyright") as? String
+            ?? "© 2026 Webdrian"
+    }
 }
 
 // MARK: - About window
@@ -98,9 +105,16 @@ struct AboutView: View {
 
             Divider().padding(.vertical, 18)
 
-            VStack(spacing: 8) {
-                Link("Projektseite auf GitHub", destination: AppInfo.repositoryURL)
-                    .font(.system(size: 11))
+            VStack(spacing: 7) {
+                HStack(spacing: 14) {
+                    Link("Projektseite auf GitHub", destination: AppInfo.repositoryURL)
+                    Link("webdrian.de", destination: AppInfo.websiteURL)
+                }
+                .font(.system(size: 11))
+
+                Text(AppInfo.copyright)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
                 Text("MIT-Lizenz · Quelltext offen")
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
