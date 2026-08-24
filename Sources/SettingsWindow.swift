@@ -40,6 +40,7 @@ struct SettingsView: View {
     @State private var mediaKeysActive = MediaKeyTap.shared.isRunning
     @State private var launchAtLogin = LoginItem.isEnabled
     @State private var showInDock = DockVisibility.isEnabled
+    @ObservedObject private var appearance = Appearance.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
@@ -52,6 +53,10 @@ struct SettingsView: View {
                 .onChange(of: softwareDimming) { _, newValue in
                     controller.softwareDimming = newValue
                 }
+            }
+
+            section("Farbe") {
+                accentPicker
             }
 
             section("Tastatur") {
@@ -74,7 +79,7 @@ struct SettingsView: View {
                 if mediaKeys {
                     HStack(spacing: 7) {
                         Circle()
-                            .fill(mediaKeysActive ? Color(red: 0.30, green: 0.80, blue: 0.36) : Theme.accent)
+                            .fill(mediaKeysActive ? Theme.ok : Theme.warning)
                             .frame(width: 7, height: 7)
                         Text(mediaKeysActive ? "Tasten sind aktiv" : "Berechtigung fehlt")
                             .font(.system(size: 11))
@@ -114,6 +119,64 @@ struct SettingsView: View {
         }
         .padding(24)
         .frame(width: 460)
+    }
+
+    private var accentPicker: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            HStack(spacing: 9) {
+                ForEach(Appearance.presets, id: \.token) { preset in
+                    swatch(token: preset.token, name: preset.name)
+                }
+            }
+
+            HStack(spacing: 10) {
+                ColorPicker("Eigene Farbe", selection: Binding(
+                    get: { appearance.accent },
+                    set: { appearance.selection = $0.hexString }
+                ), supportsOpacity: false)
+                .labelsHidden()
+                Text("Eigene Farbe …")
+                    .font(.system(size: 12))
+                Spacer()
+                Text(appearance.selection == Appearance.systemToken
+                     ? "Folgt der Systemfarbe"
+                     : appearance.selection.uppercased())
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
+
+            Text("Gilt für die Regler und die Auswahl. Die Statuspunkte behalten ihre Farben — grün, gelb und rot bedeuten dort etwas.")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func swatch(token: String, name: String) -> some View {
+        let isSelected = appearance.selection == token
+        return Button {
+            appearance.selection = token
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(Appearance.color(for: token))
+                    .frame(width: 20, height: 20)
+                if token == Appearance.systemToken {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.9))
+                }
+                if isSelected {
+                    Circle()
+                        .stroke(Color.primary.opacity(0.55), lineWidth: 2)
+                        .frame(width: 26, height: 26)
+                }
+            }
+            .frame(width: 28, height: 28)
+            .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .help(name)
     }
 
     // MARK: Pieces

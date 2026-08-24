@@ -4,8 +4,12 @@ import AppKit
 // MARK: - Shared look
 
 enum Theme {
-    /// Taken from the app icon, so menu and icon read as one thing.
-    static let accent = Color(red: 0.98, green: 0.68, blue: 0.13)
+    /// Fixed on purpose: this amber means "attention", not "accent". It keeps its meaning
+    /// even when the user repaints the accent colour.
+    static let warning = Color(red: 0.98, green: 0.68, blue: 0.13)
+    static let ok = Color(red: 0.30, green: 0.80, blue: 0.36)
+    static let bad = Color(red: 0.85, green: 0.30, blue: 0.28)
+
     static let rowIconWidth: CGFloat = 22
     static let width: CGFloat = 320
 }
@@ -13,9 +17,9 @@ enum Theme {
 extension ManagedDisplay.Health {
     var color: Color {
         switch self {
-        case .good: return Color(red: 0.30, green: 0.80, blue: 0.36)
-        case .partial: return Theme.accent
-        case .none: return Color(red: 0.85, green: 0.30, blue: 0.28)
+        case .good: return Theme.ok
+        case .partial: return Theme.warning
+        case .none: return Theme.bad
         }
     }
 }
@@ -116,7 +120,7 @@ struct MenuContent: View {
             }
 
             if MediaKeyTap.isEnabled, !mediaKeysActive {
-                ActionRow(icon: "exclamationmark.triangle", title: "Tastenfreigabe fehlt", tint: Theme.accent) {
+                ActionRow(icon: "exclamationmark.triangle", title: "Tastenfreigabe fehlt", tint: Theme.warning) {
                     EmptyView()
                 }
                 .onTapGesture { MediaKeyTap.openAccessibilitySettings() }
@@ -303,6 +307,8 @@ struct TintedSlider: View {
     let range: ClosedRange<Double>
     var isEnabled: Bool = true
 
+    @ObservedObject private var appearance = Appearance.shared
+
     private let trackHeight: CGFloat = 6
     private let knobSize: CGFloat = 18
 
@@ -319,7 +325,7 @@ struct TintedSlider: View {
                     .frame(height: trackHeight)
 
                 Capsule()
-                    .fill(isEnabled ? Theme.accent : Color.secondary.opacity(0.4))
+                    .fill(isEnabled ? appearance.accent : Color.secondary.opacity(0.4))
                     .frame(width: max(knobCenter, trackHeight), height: trackHeight)
 
                 Circle()
@@ -359,6 +365,7 @@ struct TintedSlider: View {
 
 struct MonitorRow: View {
 
+    @ObservedObject private var appearance = Appearance.shared
     @ObservedObject var display: ManagedDisplay
     let isSelected: Bool
     let action: () -> Void
@@ -368,6 +375,7 @@ struct MonitorRow: View {
             HStack(spacing: 8) {
                 Image(systemName: "checkmark")
                     .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(appearance.accent)
                     .frame(width: 14)
                     .opacity(isSelected ? 1 : 0)
 
