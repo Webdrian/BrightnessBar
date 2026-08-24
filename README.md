@@ -92,12 +92,19 @@ durchgestrichene Lautsprechersymbol und tun nichts. Über DDC funktioniert es tr
 Dafür braucht die App eine Ausnahme unter *Systemeinstellungen → Datenschutz & Sicherheit →
 Bedienungshilfen*, weil Tastendrücke nur über einen Event-Tap abzufangen sind. Deshalb ist
 die Funktion **standardmäßig aus** — alles andere in dieser App läuft ohne Berechtigungen.
-Zwei Dinge dazu:
+Das Menü zeigt danach an, ob die Tasten tatsächlich aktiv sind, und versucht bei jedem
+Öffnen erneut, den Tap zu erzeugen — eine nachträglich erteilte Berechtigung greift also
+ohne Neustart.
 
-* Nach dem Erteilen muss die App **neu gestartet** werden.
-* Die Berechtigung hängt an der Code-Signatur. Weil die App nur ad-hoc signiert ist, ändert
-  sich diese bei **jedem Neubau** — nach `./build.sh` muss die Ausnahme also erneut erteilt
-  werden. Bei der geladenen Release-Version bleibt sie bestehen.
+Zwei Fallstricke:
+
+* **Ein vorhandener Eintrag in der Liste bedeutet nicht, dass er gilt.** Die Berechtigung
+  hängt an der Code-Signatur; weil die App nur ad-hoc signiert ist, ändert sich diese bei
+  jedem Neubau. Nach einem Update passt ein alter Eintrag also nicht mehr — dann in der
+  Liste mit „−" entfernen und die App neu hinzufügen.
+* Ob es funktioniert, verrät auch das Log beim Start:
+  `log stream --predicate 'process == "BrightnessBar"'` oder ein Start direkt aus dem
+  Terminal zeigt `Bedienungshilfen=1, Tap aktiv=1`, wenn alles sitzt.
 
 Mit gehaltenem `⌥` gibt die App die Tasten an macOS durch, damit `⌥` + Lautstärke weiterhin
 die Toneinstellungen öffnet.

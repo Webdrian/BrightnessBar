@@ -70,6 +70,21 @@ final class MediaKeyTap {
         AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
     }
 
+    /// Opens the exact settings pane, because "somewhere under Privacy" is not a useful hint.
+    static func openAccessibilitySettings() {
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    /// Called whenever the menu opens: picks up a permission that was granted while the app
+    /// was already running, so no restart is needed. Returns the state to display.
+    @discardableResult
+    func refresh() -> Bool {
+        guard Self.isEnabled else { stop(); return false }
+        if !isRunning { _ = start() }
+        return isRunning
+    }
+
     /// Returns false when the tap could not be created — almost always missing permission.
     @discardableResult
     func start() -> Bool {

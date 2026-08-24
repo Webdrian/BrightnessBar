@@ -10,7 +10,7 @@ struct MenuContent: View {
     @State private var launchAtLogin = LoginItem.isEnabled
     @State private var showInDock = DockVisibility.isEnabled
     @State private var mediaKeys = MediaKeyTap.isEnabled
-    @State private var mediaKeysBlocked = false
+    @State private var mediaKeysActive = MediaKeyTap.shared.isRunning
 
     private var controllable: [ManagedDisplay] { controller.controllableDisplays }
     private var unavailable: [ManagedDisplay] { controller.displays.filter { !$0.isControllable } }
@@ -61,6 +61,11 @@ struct MenuContent: View {
         }
         .padding(14)
         .frame(width: 320)
+        .onAppear {
+            // Retry here: the permission is often granted while the app is already running.
+            mediaKeys = MediaKeyTap.isEnabled
+            mediaKeysActive = MediaKeyTap.shared.refresh()
+        }
     }
 
     private var header: some View {
@@ -87,24 +92,34 @@ struct MenuContent: View {
                 .onChange(of: mediaKeys) { _, newValue in
                     MediaKeyTap.isEnabled = newValue
                     if newValue {
-                        if MediaKeyTap.shared.start() {
-                            mediaKeysBlocked = false
-                        } else {
-                            // No permission yet: prompt, and say so instead of failing silently.
-                            MediaKeyTap.requestPermission()
-                            mediaKeysBlocked = true
-                        }
+                        mediaKeysActive = MediaKeyTap.shared.start()
+                        if !mediaKeysActive { MediaKeyTap.requestPermission() }
                     } else {
                         MediaKeyTap.shared.stop()
-                        mediaKeysBlocked = false
+                        mediaKeysActive = false
                     }
                 }
 
-            if mediaKeysBlocked {
-                Text("Dafür fehlt noch die Berechtigung: Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen → BrightnessBar aktivieren, dann die App neu starten.")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+            // The state is shown rather than assumed: the tap can only be created once the
+            // Accessibility permission is in effect, and silence there is the worst outcome.
+            if mediaKeys {
+                if mediaKeysActive {
+                    Label("Tasten sind aktiv", systemImage: "checkmark.circle")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
+                } else {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Berechtigung fehlt. In den Systemeinstellungen bei „Bedienungshilfen“ ein Häkchen vor BrightnessBar setzen — schon vorhandene Einträge notfalls mit „−“ entfernen und neu hinzufügen. Danach hier erneut das Menü öffnen.")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Button("Bedienungshilfen öffnen") {
+                            MediaKeyTap.openAccessibilitySettings()
+                        }
+                        .buttonStyle(.borderless)
+                        .font(.system(size: 10))
+                    }
+                }
             }
 
             Toggle("Softwaredimmung, wo DDC fehlt", isOn: $controller.softwareDimming)
