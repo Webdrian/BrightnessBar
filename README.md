@@ -19,6 +19,9 @@ gar keinen Regler anbietet.
   <img src="docs/settings.png" width="380" alt="Einstellungsfenster mit erklärten Tastenkürzeln">
 </p>
 
+Unter [`docs/index.html`](docs/index.html) liegt außerdem eine Projektseite. Sie lässt sich in
+den Repository-Einstellungen unter *Pages* aus dem Ordner `/docs` veröffentlichen.
+
 ## Worum es geht
 
 macOS regelt die Helligkeit nur bei internen Panels und bei Apples eigenen
