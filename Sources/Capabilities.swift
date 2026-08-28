@@ -10,6 +10,10 @@ struct DisplayCapabilities: Codable {
 
     /// Every VCP code the monitor claims to support.
     let supportedCodes: Set<UInt8>
+    /// The settings a code accepts, where the monitor lists them: `60(11 12 0F 10)` means
+    /// input source understands exactly those four. Keyed by the code in hex, because JSON
+    /// dictionaries need string keys.
+    let allowedValues: [String: [UInt8]]
     /// `model(...)` from the string, purely informational.
     let model: String?
     /// `mccs_ver(...)`, useful when a monitor misbehaves and someone reports it.
@@ -21,6 +25,11 @@ struct DisplayCapabilities: Codable {
 
     func supports(_ code: VCPCode) -> Bool { supportedCodes.contains(code.rawValue) }
 
+    /// The settings the monitor listed for a code, in the order it listed them.
+    func values(for code: VCPCode) -> [UInt8] {
+        allowedValues[String(format: "%02X", code.rawValue)] ?? []
+    }
+
     /// Parses the parenthesised format, for example:
     /// `(prot(monitor)type(lcd)model(UN880)cmds(01 02 03)vcp(02 10 12 60(11 12) DF)mccs_ver(2.1))`
     ///
@@ -30,21 +39,41 @@ struct DisplayCapabilities: Codable {
         guard let vcpBody = DisplayCapabilities.section(named: "vcp", in: raw) else { return nil }
 
         var codes: Set<UInt8> = []
+        var values: [String: [UInt8]] = [:]
         var token = ""
         var depth = 0
+        var currentCode: UInt8?
+        var nested = ""
+
         for character in vcpBody {
             switch character {
             case "(":
                 depth += 1
-                if depth == 1, let code = UInt8(token, radix: 16) { codes.insert(code) }
+                if depth == 1 {
+                    // The token before the parenthesis is the code the values belong to.
+                    currentCode = UInt8(token, radix: 16)
+                    if let code = currentCode { codes.insert(code) }
+                    nested = ""
+                }
                 token = ""
             case ")":
+                if depth == 1, let code = currentCode {
+                    let parsed = nested
+                        .split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" })
+                        .compactMap { UInt8($0, radix: 16) }
+                    if !parsed.isEmpty {
+                        values[String(format: "%02X", code)] = parsed
+                    }
+                    currentCode = nil
+                }
                 depth = max(0, depth - 1)
                 token = ""
             case " ", "\t", "\n":
                 if depth == 0, let code = UInt8(token, radix: 16) { codes.insert(code) }
+                if depth >= 1 { nested.append(character) }
                 token = ""
             default:
+                if depth >= 1 { nested.append(character) }
                 token.append(character)
             }
         }
@@ -52,6 +81,7 @@ struct DisplayCapabilities: Codable {
 
         guard !codes.isEmpty else { return nil }
         self.supportedCodes = codes
+        self.allowedValues = values
         self.model = DisplayCapabilities.section(named: "model", in: raw)
         self.mccsVersion = DisplayCapabilities.section(named: "mccs_ver", in: raw)
         self.raw = raw

@@ -247,6 +247,49 @@ struct DisplayControls: View {
                     }
                 }
 
+                if !display.inputSources.isEmpty {
+                    Rectangle()
+                        .fill(Color.primary.opacity(0.10))
+                        .frame(height: 1)
+                        .padding(.vertical, 2)
+
+                    HStack {
+                        Text("Eingang").font(.system(size: 12))
+                        Spacer()
+                        Menu {
+                            ForEach(display.inputSources, id: \.self) { value in
+                                Button {
+                                    confirmInputSwitch(display: display, to: value)
+                                } label: {
+                                    if value == display.currentInput {
+                                        Label(InputSource.name(for: value), systemImage: "checkmark")
+                                    } else {
+                                        Text(InputSource.name(for: value))
+                                    }
+                                }
+                            }
+                        } label: {
+                            Text(display.currentInput.map { InputSource.name(for: $0) } ?? "wählen …")
+                                .font(.system(size: 12))
+                        }
+                        .menuStyle(.borderlessButton)
+                        .fixedSize()
+                        .disabled(display.inputSwitchPending)
+                    }
+
+                    if display.inputSwitchRefused {
+                        Text("Der Monitor ist beim bisherigen Eingang geblieben. Das tun viele Geräte, wenn an der gewählten Buchse kein Signal anliegt.")
+                            .font(.system(size: 10))
+                            .foregroundStyle(Theme.warning)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Text("Schaltet den Monitor auf eine andere Quelle. Das Bild dieses Macs verschwindet dann von diesem Bildschirm — zurück geht es hier oder am Monitor selbst.")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
                 if display.isSoftwareDimmed {
                     Text("Der Regler dunkelt das Bild ab. Das Backlight bleibt unverändert, weil dieser Anschluss DDC/CI nicht durchleitet.")
                         .font(.system(size: 10))
@@ -260,6 +303,31 @@ struct DisplayControls: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+}
+
+/// Switching a monitor to another source is easy to do by accident and, on many monitors,
+/// impossible to undo from here: they answer DDC only for the input they are currently
+/// showing. Measured on an LG UN880 — once it shows the console, the Mac cannot reach it.
+/// So the step gets a deliberate confirmation.
+@MainActor
+private func confirmInputSwitch(display: ManagedDisplay, to value: UInt8) {
+    guard value != display.currentInput else { return }
+
+    let alert = NSAlert()
+    alert.alertStyle = .warning
+    alert.messageText = "\(display.displayLabel) auf \(InputSource.name(for: value)) umschalten?"
+    alert.informativeText = """
+        Dieser Bildschirm zeigt danach die andere Quelle, und das Bild dieses Macs verschwindet \
+        von ihm. Zurück geht es meist nur am Monitor selbst, weil viele Geräte über den \
+        inaktiven Eingang nicht mehr ansprechbar sind.
+        """
+    alert.addButton(withTitle: "Umschalten")
+    alert.addButton(withTitle: "Abbrechen")
+
+    NSApp.activate(ignoringOtherApps: true)
+    if alert.runModal() == .alertFirstButtonReturn {
+        display.setInput(value)
     }
 }
 
