@@ -177,8 +177,14 @@ erreicht der Mac das Gerät nicht mehr, obwohl die Kabelverbindung bestehen blei
 den Monitor weiter als angeschlossen führt.
 
 Nach dem Umschalten liest die App den tatsächlichen Eingang zurück, statt den Erfolg
-anzunehmen. Bleibt der Monitor stehen — was viele tun, wenn an der gewählten Buchse kein
-Signal anliegt — sagt sie das, anstatt etwas Falsches anzuzeigen.
+anzunehmen. Bleibt der Monitor stehen, sagt sie das, anstatt etwas Falsches anzuzeigen.
+
+Das ist keine theoretische Vorsicht. Das Testgerät — ein LG UN880 — führt `60(11 12 0F 10)`
+in seiner Selbstauskunft und **verwirft Schreibzugriffe darauf trotzdem**: mit anliegendem
+Signal an der Zielbuchse, mit anschließendem `Save Current Settings` (0x0C), bei
+einwandfreiem Kanal, während Helligkeit im selben Moment funktionierte. Bei diesem Hersteller
+ist das verbreitet. Eine gemeldete Fähigkeit ist eben eine Behauptung des Geräts, kein
+Versprechen — deshalb wird nachgemessen statt geglaubt.
 
 ## Wie ein Monitor erkannt wird
 
