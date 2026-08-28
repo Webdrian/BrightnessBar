@@ -8,8 +8,14 @@ gar keinen Regler anbietet.
 > I²C channel is unreachable. UI is in German.*
 
 <p align="center">
-  <img src="docs/menu.png" width="320" alt="Menü: ein Monitor im Detail, darunter die Monitorauswahl mit Statuspunkten">
-  &nbsp;
+  <img src="docs/hero.png" width="820" alt="BrightnessBar: Menü mit Reglern für Helligkeit, Kontrast, Lautstärke und Eingangswahl">
+</p>
+
+<p align="center">
+  <img src="docs/menu-light.png" width="290" alt="Menü im hellen Erscheinungsbild">
+  &nbsp;&nbsp;
+  <img src="docs/menu.png" width="290" alt="Menü im dunklen Erscheinungsbild">
+  &nbsp;&nbsp;
   <img src="docs/settings.png" width="380" alt="Einstellungsfenster mit erklärten Tastenkürzeln">
 </p>
 
@@ -27,6 +33,7 @@ Lautstärke.
 ## Funktionen
 
 * Helligkeit und Kontrast pro Monitor, direkt am Backlight
+* Eingang umschalten, wenn der Monitor seine Buchsen meldet
 * Lautstärke und Stummschaltung bei Monitoren mit Lautsprechern
 * Globale Tastenkürzel, die auf den Monitor unter dem Mauszeiger wirken
 * Optional die Helligkeits- und Lautstärketasten der Tastatur
