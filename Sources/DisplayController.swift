@@ -19,6 +19,8 @@ struct ProbedDisplay {
     let muted: Bool?
     /// What the monitor said about itself, when it answers VCP 0xF3 at all.
     let capabilities: DisplayCapabilities?
+    /// The input the monitor is currently showing, when it reports one.
+    let inputSource: UInt8?
     /// False when the kernel refuses to carry I²C traffic for this display at all. Such a
     /// display gets no slider — dragging one would silently do nothing.
     let busUsable: Bool
@@ -41,6 +43,7 @@ enum DisplayProber {
                     volumeMax: 100,
                     muted: nil,
                     capabilities: nil,
+                    inputSource: nil,
                     busUsable: BuiltInBrightness.isAvailable
                 )
             }
@@ -49,7 +52,7 @@ enum DisplayProber {
                 return ProbedDisplay(discovered: discovered, link: nil, brightness: nil,
                                      brightnessMax: 100, contrast: nil, contrastMax: 100,
                                      volume: nil, volumeMax: 100, muted: nil,
-                                     capabilities: nil, busUsable: false)
+                                     capabilities: nil, inputSource: nil, busUsable: false)
             }
 
             // The EDID identity keys the cache: display IDs move between reboots, this does not.
@@ -64,7 +67,7 @@ enum DisplayProber {
                 return ProbedDisplay(discovered: discovered, link: nil, brightness: nil,
                                      brightnessMax: 100, contrast: nil, contrastMax: 100,
                                      volume: nil, volumeMax: 100, muted: nil,
-                                     capabilities: nil, busUsable: false)
+                                     capabilities: nil, inputSource: nil, busUsable: false)
             }
 
             var brightness: UInt16?
@@ -94,6 +97,10 @@ enum DisplayProber {
             let contrast = shouldProbe(.contrast) ? link.readSync(.contrast) : nil
             let volume = shouldProbe(.speakerVolume) ? link.readSync(.speakerVolume) : nil
             let mute = shouldProbe(.audioMute) ? link.readSync(.audioMute) : nil
+            // Only meaningful when the monitor also listed which inputs it has; without that
+            // list there is nothing to offer, and guessing could black out a screen.
+            let hasInputList = !(capabilities?.values(for: .inputSource) ?? []).isEmpty
+            let input = hasInputList ? link.readSync(.inputSource) : nil
 
             CapabilityCache.storeSettleIndex(link.learnedSettleStep, for: identity)
 
@@ -108,6 +115,7 @@ enum DisplayProber {
                 volumeMax: volume?.max ?? 100,
                 muted: mute.map { $0.current == AudioMuteState.muted.rawValue },
                 capabilities: capabilities,
+                inputSource: input.map { UInt8($0.current & 0xFF) },
                 busUsable: true
             )
         }
@@ -137,6 +145,9 @@ final class ManagedDisplay: ObservableObject, Identifiable {
     let volumeMax: UInt16
     /// What the monitor reported about itself, if anything.
     let capabilities: DisplayCapabilities?
+    /// The inputs the monitor listed, in the order it listed them. Empty when it said nothing,
+    /// in which case no picker is offered — guessing at input numbers could black out a screen.
+    let inputSources: [UInt8]
     /// Only displays that offer VCP 0x62 get audio controls; most monitors have no speakers.
     let volumeSupported: Bool
     let muteSupported: Bool
@@ -148,6 +159,7 @@ final class ManagedDisplay: ObservableObject, Identifiable {
     @Published var contrast: Double
     @Published var volume: Double
     @Published var isMuted: Bool
+    @Published var currentInput: UInt8?
 
     /// Set during a rescan when two panels report the same EDID name, so the menu can
     /// tell two identical monitors apart.
@@ -170,6 +182,7 @@ final class ManagedDisplay: ObservableObject, Identifiable {
         // A monitor may list a feature yet refuse to report its value. Trust the claim: a
         // slider that might work beats no slider at all.
         self.capabilities = probed.capabilities
+        self.inputSources = probed.capabilities?.values(for: .inputSource) ?? []
         self.contrastSupported = probed.contrast != nil
             || probed.capabilities?.supports(.contrast) == true
         self.volumeMax = probed.volumeMax
@@ -196,6 +209,7 @@ final class ManagedDisplay: ObservableObject, Identifiable {
         self.contrast = Double(probed.contrast ?? probed.contrastMax / 2)
         self.volume = Double(probed.volume ?? 0)
         self.isMuted = probed.muted ?? false
+        self.currentInput = probed.inputSource
         self.lastSentBrightness = probed.brightness
         self.lastSentContrast = probed.contrast
 
@@ -309,6 +323,34 @@ final class ManagedDisplay: ObservableObject, Identifiable {
         // Moving the slider off zero while muted should be audible, not silently ignored.
         if isMuted, value > 0 { setMuted(false) }
     }
+
+    /// Switches the monitor to another input. The picture from this Mac disappears from that
+    /// screen until it is switched back — here or at the monitor itself.
+    func setInput(_ value: UInt8) {
+        guard case .ddc(let link) = backend, inputSources.contains(value) else { return }
+        let previous = currentInput
+        currentInput = value
+        inputSwitchPending = true
+        link.schedule(.inputSource, value: UInt16(value))
+
+        // A monitor may simply ignore a switch to an input with nothing plugged into it —
+        // measured on an LG UN880, which accepted the command and stayed put. So the claim is
+        // checked rather than trusted, and the menu falls back to the truth.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak self] in
+            guard let self, case .ddc(let link) = self.backend else { return }
+            link.read(.inputSource) { result in
+                self.inputSwitchPending = false
+                guard let result else { self.currentInput = previous; return }
+                let actual = UInt8(result.current & 0xFF)
+                self.currentInput = actual
+                self.inputSwitchRefused = (actual != value)
+            }
+        }
+    }
+
+    /// True while a switch is in flight, and set when the monitor declined it.
+    @Published private(set) var inputSwitchPending = false
+    @Published var inputSwitchRefused = false
 
     func setMuted(_ muted: Bool) {
         guard muteSupported, case .ddc(let link) = backend else { return }
@@ -448,13 +490,28 @@ final class DisplayController: ObservableObject {
 
     /// The display the volume keys act on: the one under the pointer when it has speakers,
     /// otherwise the only display that has any. Most setups have exactly one candidate.
+    /// The display the volume keys should act on — or nil, which means "leave the keys alone".
+    ///
+    /// Nil is the common case: as long as macOS can set the current output device's volume
+    /// itself, the keys belong to it. Headphones, built-in speakers and audio interfaces all
+    /// fall under that. Only a monitor whose audio offers no volume control at all is this
+    /// app's business, and then only the monitor the sound is actually going to.
     func displayForVolume() -> ManagedDisplay? {
+        guard let output = AudioOutput.current, !output.systemControllable else { return nil }
+
         let candidates = controllableDisplays.filter(\.volumeSupported)
         guard !candidates.isEmpty else { return nil }
-        if let under = displayUnderCursor(), candidates.contains(where: { $0.id == under.id }) {
-            return under
+
+        // CoreAudio names a monitor's audio device after the monitor, which pairs them up.
+        if let match = candidates.first(where: { output.matches(displayName: $0.name) }) {
+            return match
         }
-        return candidates.first
+        // Unambiguous fallback: sound goes to a display, and exactly one can take it.
+        if output.isDisplayAttached, candidates.count == 1 {
+            return candidates[0]
+        }
+        // Anything else stays untouched rather than guessing at the wrong device.
+        return nil
     }
 
     func step(percent: Int) {

@@ -99,6 +99,11 @@ Das lohnt besonders bei Monitorlautsprechern über DisplayPort oder HDMI: solche
 melden macOS oft überhaupt keine Lautstärkeregelung — dann zeigen die Tasten nur das
 durchgestrichene Lautsprechersymbol und tun nichts. Über DDC funktioniert es trotzdem.
 
+Die Lautstärketasten greifen dabei **nur, wenn der Ton auch wirklich zum Monitor geht**. Kann
+macOS das aktuelle Ausgabegerät selbst regeln — Kopfhörer, Lautsprecher, Audiointerface —
+bleiben die Tasten bei macOS. Passt kein Monitor eindeutig zum Ausgabegerät, lässt die App
+sie ebenfalls in Ruhe, statt am falschen Gerät zu drehen.
+
 Dafür braucht die App eine Ausnahme unter *Systemeinstellungen → Datenschutz & Sicherheit →
 Bedienungshilfen*, weil Tastendrücke nur über einen Event-Tap abzufangen sind. Deshalb ist
 die Funktion **standardmäßig aus** — alles andere in dieser App läuft ohne Berechtigungen.
@@ -150,6 +155,23 @@ die Toneinstellungen öffnet.
 *Beim Anmelden starten* legt einen LaunchAgent unter
 `~/Library/LaunchAgents/de.webdrian.brightnessbar.agent.plist` an. Der speichert den
 absoluten Pfad zur App: erst an den endgültigen Ort verschieben, dann aktivieren.
+
+## Eingang umschalten
+
+Meldet ein Monitor in seiner Selbstauskunft die Eingangswahl (VCP `0x60`) samt der Liste
+seiner Buchsen, erscheint im Menü eine Auswahl — etwa um zwischen Mac und Spielkonsole zu
+wechseln, ohne ans OSD-Rad zu greifen. Die Liste kommt vom Gerät selbst; geraten wird nichts,
+denn ein falscher Eingang macht den Bildschirm schwarz.
+
+Vor dem Umschalten fragt die App nach, und das aus einem gemessenen Grund: **viele Monitore
+bedienen DDC nur für den gerade aktiven Eingang.** Auf dem Testgerät (LG UN880) ist der Weg
+zur Konsole ein Klick, der Weg zurück aber nur über das Monitormenü — sobald HDMI aktiv ist,
+erreicht der Mac das Gerät nicht mehr, obwohl die Kabelverbindung bestehen bleibt und macOS
+den Monitor weiter als angeschlossen führt.
+
+Nach dem Umschalten liest die App den tatsächlichen Eingang zurück, statt den Erfolg
+anzunehmen. Bleibt der Monitor stehen — was viele tun, wenn an der gewählten Buchse kein
+Signal anliegt — sagt sie das, anstatt etwas Falsches anzuzeigen.
 
 ## Wie ein Monitor erkannt wird
 

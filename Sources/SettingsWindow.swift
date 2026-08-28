@@ -62,7 +62,7 @@ struct SettingsView: View {
             section("Tastatur") {
                 settingToggle(
                     "Tasten der Tastatur verwenden",
-                    "Legt die Helligkeits- und Lautstärketasten auf die Monitore. Braucht die Berechtigung „Bedienungshilfen“.",
+                    "Legt die Helligkeits- und Lautstärketasten auf die Monitore. Die Lautstärketasten greifen nur, wenn der Ton auf einem Monitor liegt, den macOS selbst nicht regeln kann — Kopfhörer und Lautsprecher bleiben unberührt. Braucht die Berechtigung „Bedienungshilfen“.",
                     isOn: $mediaKeys
                 )
                 .onChange(of: mediaKeys) { _, newValue in

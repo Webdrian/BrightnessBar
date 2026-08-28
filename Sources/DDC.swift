@@ -36,6 +36,7 @@ func makeAVService(from entry: io_service_t) -> CFTypeRef? {
 enum VCPCode: UInt8, CaseIterable {
     case brightness = 0x10
     case contrast = 0x12
+    case inputSource = 0x60
     case speakerVolume = 0x62
     /// MCCS calls this "Audio Mute": 1 mutes, 2 unmutes. It is not a 0-100 scale despite
     /// what the display reports as its maximum.
@@ -45,9 +46,32 @@ enum VCPCode: UInt8, CaseIterable {
         switch self {
         case .brightness: return "Helligkeit"
         case .contrast: return "Kontrast"
+        case .inputSource: return "Eingang"
         case .speakerVolume: return "Lautstärke"
         case .audioMute: return "Stumm"
         }
+    }
+}
+
+/// The input-source values MCCS 2.x defines for VCP 0x60. Monitors also use vendor-specific
+/// values beyond this list — those are shown by their raw number rather than hidden.
+enum InputSource {
+
+    static let names: [UInt8: String] = [
+        0x01: "VGA 1",        0x02: "VGA 2",
+        0x03: "DVI 1",        0x04: "DVI 2",
+        0x05: "Composite 1",  0x06: "Composite 2",
+        0x07: "S-Video 1",    0x08: "S-Video 2",
+        0x09: "Tuner 1",      0x0A: "Tuner 2",      0x0B: "Tuner 3",
+        0x0C: "Component 1",  0x0D: "Component 2",  0x0E: "Component 3",
+        0x0F: "DisplayPort 1", 0x10: "DisplayPort 2",
+        0x11: "HDMI 1",       0x12: "HDMI 2",
+        // Widely used vendor extensions for USB-C / Thunderbolt inputs.
+        0x1B: "USB-C",        0x1F: "USB-C 2",
+    ]
+
+    static func name(for value: UInt8) -> String {
+        names[value] ?? String(format: "Eingang 0x%02X", value)
     }
 }
 
