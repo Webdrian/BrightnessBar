@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BrightnessBar — Helligkeit externer Monitore aus der Menüleiste</title>
+<meta name="description" content="macOS-Menüleisten-App, die Helligkeit, Kontrast und Lautstärke externer Monitore über DDC/CI direkt am Gerät regelt.">
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel-2: #1c2230;
+    --line: #2a313c;
+    --text: #e6edf3;
+    --muted: #9aa7b4;
+    --accent: #2f81f7;
+    --amber: #f5a623;
+    --green: #3fb950;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 56px 24px 72px; }
+
+  /* Header */
+  .top { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(0, 1.15fr); gap: 56px; align-items: start; }
+  .brand { display: flex; align-items: center; gap: 18px; }
+  .brand img { width: 78px; height: 78px; border-radius: 18px; }
+  h1 { font-size: 44px; line-height: 1.05; margin: 0; letter-spacing: -0.02em; }
+  .tagline { color: var(--muted); font-size: 19px; margin: 18px 0 0; }
+  .badges { display: flex; flex-wrap: wrap; gap: 9px; margin: 24px 0 0; }
+  .badge {
+    font-size: 13px; padding: 5px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--muted);
+  }
+  .badge.accent { color: #7fb2ff; border-color: #1f3d66; }
+  .lead { margin: 24px 0 0; color: var(--muted); }
+  .lead strong { color: var(--text); font-weight: 600; }
+
+  .icons { display: flex; gap: 34px; margin: 30px 0 0; }
+  .icons div { text-align: center; color: var(--muted); font-size: 13px; }
+  .icons .glyph { font-size: 26px; display: block; margin-bottom: 7px; color: var(--text); }
+
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 32px 0 0; }
+  .btn {
+    display: inline-block; padding: 11px 20px; border-radius: 9px; text-decoration: none;
+    font-weight: 600; font-size: 15px;
+  }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.ghost { border: 1px solid var(--line); color: var(--text); background: var(--panel); }
+  .req { color: var(--muted); font-size: 13px; margin: 12px 0 0; }
+
+  /* Screens */
+  .screens { display: flex; gap: 20px; justify-content: flex-end; }
+  .screens img {
+    width: 290px; border-radius: 12px; border: 1px solid var(--line);
+    box-shadow: 0 22px 50px rgba(0,0,0,.45);
+  }
+  .screens figure { margin: 0; }
+  .screens figcaption { color: var(--muted); font-size: 12px; text-align: center; margin-top: 10px; }
+
+  /* Cards */
+  .cards {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+    gap: 16px; margin: 64px 0 0;
+  }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 13px; padding: 20px; }
+  .card h3 { margin: 0 0 8px; font-size: 16px; display: flex; align-items: center; gap: 9px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; }
+  .card .glyph { font-size: 19px; }
+  .card .note { margin-top: 12px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 11px; }
+
+  kbd {
+    display: inline-block; min-width: 26px; text-align: center;
+    padding: 3px 7px; margin-right: 3px; border-radius: 6px;
+    border: 1px solid var(--line); background: var(--panel-2);
+    font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text);
+  }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; margin-right: 7px; }
+  .dot.g { background: var(--green); } .dot.a { background: var(--amber); }
+
+  /* Footer strip */
+  .strip {
+    display: flex; flex-wrap: wrap; gap: 26px; justify-content: center;
+    margin: 56px 0 0; padding: 20px; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 13px;
+  }
+  footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 30px; }
+  footer a { color: var(--accent); }
+
+  @media (max-width: 900px) {
+    .top { grid-template-columns: 1fr; gap: 40px; }
+    .screens { justify-content: flex-start; flex-wrap: wrap; }
+    h1 { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="top">
+    <div>
+      <div class="brand">
+        <img src="icon.png" alt="">
+        <div>
+          <h1>BrightnessBar</h1>
+        </div>
+      </div>
+
+      <p class="tagline">Helligkeit, Kontrast und Lautstärke externer Monitore — direkt am Gerät.</p>
+
+      <div class="badges">
+        <span class="badge">macOS 14+</span>
+        <span class="badge">Apple Silicon</span>
+        <span class="badge accent">Open Source</span>
+        <span class="badge">Swift</span>
+        <span class="badge">DDC/CI</span>
+      </div>
+
+      <p class="lead">
+        macOS regelt die Helligkeit nur bei internen Panels und Apples eigenen Displays. Bei
+        einem gewöhnlichen externen Monitor sind die Schieber wirkungslos.
+        BrightnessBar spricht den Monitor <strong>direkt über den I²C-Kanal seines
+        Displayanschlusses an</strong> und setzt dort dieselben Werte wie sein OSD-Menü.
+      </p>
+
+      <div class="icons">
+        <div><span class="glyph">☀️</span>Helligkeit</div>
+        <div><span class="glyph">◐</span>Kontrast</div>
+        <div><span class="glyph">🔊</span>Lautstärke</div>
+        <div><span class="glyph">🖥️</span>Eingang</div>
+      </div>
+
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/Webdrian/BrightnessBar/releases/latest">Download</a>
+        <a class="btn ghost" href="https://github.com/Webdrian/BrightnessBar">Quelltext auf GitHub</a>
+      </div>
+      <p class="req">
+        Braucht macOS 14 oder neuer und einen Mac mit Apple Silicon. Nicht notarisiert —
+        beim ersten Start Rechtsklick → Öffnen.
+      </p>
+    </div>
+
+    <div class="screens">
+      <figure>
+        <img src="menu-light.png" alt="Menü im hellen Erscheinungsbild">
+        <figcaption>Hell</figcaption>
+      </figure>
+      <figure>
+        <img src="menu.png" alt="Menü im dunklen Erscheinungsbild">
+        <figcaption>Dunkel</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="cards">
+
+    <div class="card">
+      <h3><span class="glyph">☀️</span> Direkt am Monitor</h3>
+      <p>
+        Regelt Helligkeit, Kontrast und Lautstärke über DDC/CI — dieselben Werte, die das
+        OSD-Menü setzt. Das Backlight wird wirklich dunkler, das Bild nicht nur abgedunkelt.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3><span class="glyph">🖥️</span> Mehrere Monitore</h3>
+      <p>
+        Findet alle angeschlossenen Displays selbst und zeigt pro Gerät, wie es angesteuert
+        wird.
+      </p>
+      <p class="note">
+        <span class="dot g"></span>Backlight über DDC/CI<br>
+        <span class="dot a"></span>Softwaredimmung als Rückfallebene
+      </p>
+    </div>
+
+    <div class="card">
+      <h3><span class="glyph">⌨️</span> Tastenkürzel</h3>
+      <p>
+        Wirken auf den Monitor unter dem Mauszeiger, systemweit und ohne Zusatzrechte.
+      </p>
+      <p class="note">
+        <kbd>⌥</kbd><kbd>⌘</kbd><kbd>↑</kbd> heller &nbsp;·&nbsp;
+        <kbd>⌥</kbd><kbd>⌘</kbd><kbd>↓</kbd> dunkler<br>
+        mit <kbd>⇧</kbd> in feineren Schritten
+      </p>
+    </div>
+
+    <div class="card">
+      <h3><span class="glyph">🔊</span> Ton vom Monitor</h3>
+      <p>
+        Monitorlautsprecher über DisplayPort oder HDMI melden macOS oft gar keine
+        Lautstärkeregelung — die Tasten zeigen dann nur das durchgestrichene Symbol. Über DDC
+        funktioniert es trotzdem.
+      </p>
+      <p class="note">
+        Die Lautstärketasten greifen nur, wenn der Ton auch wirklich zum Monitor geht.
+        Kopfhörer und Lautsprecher bleiben bei macOS.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3><span class="glyph">🔒</span> Sparsam mit Rechten</h3>
+      <p>
+        Helligkeit, Kontrast, Lautstärke und die Tastenkürzel laufen ohne jede Berechtigung.
+        Bildschirmaufnahme wird nie verlangt.
+      </p>
+      <p class="note">
+        Nur wer zusätzlich die <em>Medientasten</em> der Tastatur belegen will, erteilt einmalig
+        die Freigabe für Bedienungshilfen. Die Funktion ist standardmäßig aus.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3><span class="glyph">⚙️</span> Einstellbar</h3>
+      <p>
+        Anmeldestart, optionales Dock-Symbol, Farbe der Regler, Softwaredimmung als
+        Rückfallebene — und ein Einstellungsfenster, das jede Option erklärt.
+      </p>
+    </div>
+
+  </section>
+
+  <div class="strip">
+    <span>Swift</span>
+    <span>Native macOS-App</span>
+    <span>DDC/CI über I²C</span>
+    <span>Keine Bildschirmaufnahme</span>
+    <span>Bedienungshilfen nur optional</span>
+    <span>MIT-Lizenz</span>
+  </div>
+
+  <footer>
+    © 2026 Webdrian · <a href="https://webdrian.de">webdrian.de</a> ·
+    <a href="https://github.com/Webdrian/BrightnessBar">Quelltext</a>
+  </footer>
+
+</div>
+</body>
+</html>
