@@ -1,66 +1,62 @@
 # BrightnessBar
 
-Helligkeit externer Monitore aus der Menüleiste steuern — auch die Monitore, für die macOS
-gar keinen Regler anbietet.
+*[Deutsche Fassung](README.de.md)*
 
-> *English: a macOS menu bar app to control external monitor brightness, contrast and speaker
-> volume over DDC/CI on Apple Silicon, with a gamma-based dimming fallback for displays whose
-> I²C channel is unreachable. UI is in German.*
+Control the brightness of external monitors from the macOS menu bar — including the monitors
+macOS gives you no slider for at all.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/banner-dark.png">
-  <img src="docs/banner-light.png" width="960" alt="BrightnessBar: Menü mit Reglern für Helligkeit, Kontrast und Lautstärke">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/banner-en-dark.png">
+  <img src="docs/banner-en-light.png" width="960" alt="BrightnessBar: menu with sliders for brightness, contrast and volume">
 </picture>
 
-Unter [`docs/index.html`](docs/index.html) liegt außerdem eine Projektseite. Sie lässt sich in
-den Repository-Einstellungen unter *Pages* aus dem Ordner `/docs` veröffentlichen.
+> **Note:** the app's interface is in German. Everything else — the code, this README, the
+> commit history — is in English. If you would like an English UI, open an issue; it is a
+> question of translating one file's worth of strings.
 
-## Worum es geht
+## What this is for
 
-macOS regelt die Helligkeit nur bei internen Panels und bei Apples eigenen
-Thunderbolt-Displays. Bei einem gewöhnlichen externen Monitor sind die Schieber in den
-Systemeinstellungen wirkungslos und die Helligkeitstasten tun nichts — man muss ans
-OSD-Menü des Geräts.
+macOS only adjusts brightness on built-in panels and on Apple's own displays. On an ordinary
+external monitor the sliders in System Settings do nothing and the brightness keys are inert —
+you have to reach for the monitor's own OSD menu.
 
-BrightnessBar spricht den Monitor direkt über den I²C-Kanal seines Displayanschlusses an
-(DDC/CI) und regelt dort dieselben Werte, die das OSD-Menü setzt: Helligkeit, Kontrast,
-Lautstärke.
+BrightnessBar talks to the monitor directly over the I²C channel of its display connection
+(DDC/CI) and sets the very same values the OSD does: brightness, contrast, volume.
 
-## Funktionen
+## Features
 
-* Helligkeit und Kontrast pro Monitor, direkt am Backlight
-* Eingang umschalten, wenn der Monitor seine Buchsen meldet
-* Lautstärke und Stummschaltung bei Monitoren mit Lautsprechern
-* Globale Tastenkürzel, die auf den Monitor unter dem Mauszeiger wirken
-* Optional die Helligkeits- und Lautstärketasten der Tastatur
-* Mehrere Monitore koppeln und gemeinsam regeln
-* Softwaredimmung als Fallback, wenn der DDC-Kanal nicht erreichbar ist
-* Anmeldestart, optionales Dock-Symbol, Info-Fenster
-* Braucht **keine** Bedienungshilfen- oder Bildschirmaufnahme-Rechte
+* Brightness and contrast per monitor, on the backlight itself
+* Volume and mute on monitors that have speakers
+* Input switching where the monitor reports its sockets
+* Global shortcuts that act on the monitor under the pointer
+* Optionally the brightness and volume keys of the keyboard
+* Link several monitors and adjust them together
+* Gamma-based dimming as a fallback when the DDC channel is unreachable
+* Launch at login, optional Dock icon, About window
+* Needs **no** Accessibility or Screen Recording permission for any of the above
 
 ## Installation
 
-### Fertige App
+### Prebuilt app
 
-Die neueste Version liegt unter [Releases](../../releases). Nach dem Entpacken nach
-`/Applications` ziehen.
+The latest version is under [Releases](../../releases). Unpack it and drag it to
+`/Applications`.
 
-Die App ist nur ad-hoc signiert, nicht notarisiert — ein Apple-Developer-Account kostet
-99 €/Jahr, und das ist für ein kleines Werkzeug wie dieses schwer zu rechtfertigen.
-Gatekeeper blockiert sie deshalb beim ersten Start. Einmalig:
+The app is ad-hoc signed, not notarized — an Apple Developer account costs €99 a year, which
+is hard to justify for a small tool like this. Gatekeeper therefore blocks it on first launch.
+Once:
 
-**Rechtsklick auf die App → Öffnen → im Dialog „Öffnen" bestätigen.**
+**Right-click the app → Open → confirm "Open" in the dialog.**
 
-Alternativ auf der Kommandozeile:
+Or on the command line:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/BrightnessBar.app
 ```
 
-### Selbst bauen
+### Building it yourself
 
-Braucht eine Xcode-Toolchain (getestet mit Xcode 26.6 / Swift 6.3), aber kein
-Xcode-Projekt:
+Needs an Xcode toolchain (tested with Xcode 26.6 / Swift 6.3), but no Xcode project:
 
 ```bash
 git clone https://github.com/Webdrian/BrightnessBar.git
@@ -68,136 +64,132 @@ cd BrightnessBar
 ./build.sh --install
 ```
 
-`./build.sh` allein baut nur ins Projektverzeichnis, `--install` legt die App zusätzlich
-nach `/Applications`. Selbst gebaut greift Gatekeeper gar nicht ein.
+`./build.sh` on its own builds into the project directory; `--install` also places the app in
+`/Applications`. Built yourself, Gatekeeper never gets involved.
 
-## Benutzung
+## Usage
 
-Klick auf das Sonnensymbol in der Menüleiste öffnet die Regler. Das Menü zeigt einen Monitor
-im Detail; darunter lässt sich zwischen den angeschlossenen wechseln. Der Punkt hinter jedem
-Namen sagt, wie er angesteuert wird — grün heißt Backlight über DDC/CI, gelb heißt
-Softwaredimmung, rot heißt gar nicht steuerbar.
+Click the sun symbol in the menu bar to open the controls. The menu shows one monitor in
+detail, and below it you can switch between the connected ones. The dot after each name says
+how it is being driven — green means backlight over DDC/CI, amber means gamma dimming, red
+means not controllable at all.
 
 <p align="center">
-  <img src="docs/menu.png" width="300" alt="Menü mit Monitorauswahl und Statuspunkten">
+  <img src="docs/menu.png" width="300" alt="Menu with monitor picker and status dots">
   &nbsp;&nbsp;&nbsp;
-  <img src="docs/settings.png" width="430" alt="Einstellungsfenster mit erklärten Tastenkürzeln">
+  <img src="docs/settings.png" width="430" alt="Settings window with the shortcuts explained">
 </p>
 
-Alle Schalter und eine Erklärung der Tastenkürzel stehen unter *Einstellungen …*. Dort lässt
-sich auch die **Farbe der Regler** wählen — zehn Vorgaben oder eine eigene; voreingestellt
-ist die Akzentfarbe des Systems. Die Statuspunkte bleiben davon unberührt, weil grün, gelb
-und rot dort eine Bedeutung tragen.
+Every switch, plus an explanation of the shortcuts, lives under *Einstellungen …* (Settings).
+The **slider colour** is configurable there as well — ten presets or a colour of your own; the
+system accent colour is the default. The status dots stay as they are, because green, amber
+and red carry meaning.
 
-| Kürzel | Wirkung |
+| Shortcut | Effect |
 |---|---|
-| `⌥⌘↑` / `⌥⌘↓` | heller / dunkler, 10-%-Schritte |
-| `⇧⌥⌘↑` / `⇧⌥⌘↓` | heller / dunkler, 2-%-Schritte |
+| `⌥⌘↑` / `⌥⌘↓` | brighter / darker, 10 % steps |
+| `⇧⌥⌘↑` / `⇧⌥⌘↓` | brighter / darker, 2 % steps |
 
-Die Kürzel wirken auf den Monitor, auf dem der Mauszeiger gerade steht — bei mehreren
-Bildschirmen also auf den, an dem man arbeitet. Ist *Alle Displays koppeln* aktiv, wirken
-sie auf alle steuerbaren Monitore gleichzeitig.
+The shortcuts act on the monitor the pointer is currently on — with several screens, that is
+the one you are working at. With *Monitore koppeln* (link monitors) active they act on every
+controllable monitor at once.
 
-### Tasten der Tastatur
+### The keyboard's own keys
 
-Die Helligkeits- und Lautstärketasten der Tastatur lassen sich auf die Monitore legen —
-Schalter *Tasten der Tastatur verwenden* im Menü. Sie regeln dann in Sechzehntel-Schritten,
-so wie macOS es bei internen Displays tut, und die Stummschalttaste schaltet den Monitorton.
+The brightness and volume keys can be mapped onto the monitors — the *Tasten der Tastatur
+verwenden* switch in the menu. They then adjust in sixteenths, the way macOS does on internal
+displays, and the mute key mutes the monitor.
 
-Das lohnt besonders bei Monitorlautsprechern über DisplayPort oder HDMI: solche Geräte
-melden macOS oft überhaupt keine Lautstärkeregelung — dann zeigen die Tasten nur das
-durchgestrichene Lautsprechersymbol und tun nichts. Über DDC funktioniert es trotzdem.
+This is worth it above all for monitor speakers over DisplayPort or HDMI: such devices
+frequently report no volume control to macOS at all, so the keys just show the crossed-out
+speaker and do nothing. Over DDC it works anyway.
 
-Die Lautstärketasten greifen dabei **nur, wenn der Ton auch wirklich zum Monitor geht**. Kann
-macOS das aktuelle Ausgabegerät selbst regeln — Kopfhörer, Lautsprecher, Audiointerface —
-bleiben die Tasten bei macOS. Passt kein Monitor eindeutig zum Ausgabegerät, lässt die App
-sie ebenfalls in Ruhe, statt am falschen Gerät zu drehen.
+The volume keys only take effect **when the sound is actually going to a monitor**. If macOS
+can set the current output device's volume itself — headphones, speakers, an audio interface —
+the keys stay with macOS. If no monitor matches the output device unambiguously, the app
+leaves them alone rather than adjusting the wrong device.
 
-Dafür braucht die App eine Ausnahme unter *Systemeinstellungen → Datenschutz & Sicherheit →
-Bedienungshilfen*, weil Tastendrücke nur über einen Event-Tap abzufangen sind. Deshalb ist
-die Funktion **standardmäßig aus** — alles andere in dieser App läuft ohne Berechtigungen.
-Das Menü zeigt danach an, ob die Tasten tatsächlich aktiv sind, und versucht bei jedem
-Öffnen erneut, den Tap zu erzeugen — eine nachträglich erteilte Berechtigung greift also
-ohne Neustart.
+For this the app needs an exception under *System Settings → Privacy & Security →
+Accessibility*, because key presses can only be intercepted through an event tap. The feature
+is therefore **off by default** — everything else in this app runs without permissions. The
+menu then shows whether the keys are actually active, and retries creating the tap every time
+it opens, so a permission granted afterwards takes effect without a restart.
 
-**Ein vorhandener Eintrag in der Liste bedeutet nicht, dass er gilt.** Die Berechtigung hängt
-an der Code-Signatur. Ist die App nur ad-hoc signiert, lautet die hinterlegte Bedingung
-„genau dieses Binary", und jeder Neubau macht sie still ungültig — der Eintrag bleibt sichtbar
-stehen und wirkt trotzdem nicht. Abhilfe: `./Tools/make-signing-identity.sh` einmal ausführen
-(siehe unten), oder nach jedem Update den Eintrag mit „−" entfernen und neu hinzufügen.
+**An entry in that list does not mean it applies.** The permission is tied to the code
+signature. With an ad-hoc signature the stored condition is "exactly this binary", and every
+rebuild silently invalidates it — the entry stays visible and stops working. The fix is to run
+`./Tools/make-signing-identity.sh` once (see below), or to remove the entry with "−" after
+each update and add the app again.
 
-### Wenn eine Taste gar nichts auslöst
+### When a key does nothing at all
 
-Nicht jede Tastatur schickt ihre Sondertasten durch macOS' Ereignissystem. Auf dem
-Entwicklungsrechner (Logitech MX Keys Mac mit Logi Options+) kam „Helligkeit dunkler"
-zuverlässig an, „Helligkeit heller" dagegen **kein einziges Mal** — nicht abgefangen,
-sondern gar nicht erst erzeugt. Die Herstellersoftware führt solche Tasten teils selbst aus,
-unterhalb der Ebene, auf der ein Event-Tap arbeitet. Dagegen kann keine App etwas
-ausrichten.
+Not every keyboard sends its special keys through the macOS event system. On the development
+machine (Logitech MX Keys Mac with Logi Options+), "brightness down" arrived reliably while
+"brightness up" arrived **not once** — not intercepted, but never generated in the first
+place. Vendor software sometimes executes such keys itself, below the level an event tap
+works at. No app can do anything about that.
 
-Der Ausweg führt über die Herstellersoftware selbst: dort die Taste auf den Tastenanschlag
-`⌥⌘↑` bzw. `⌥⌘↓` legen. Den erzeugt sie dann selbst, und BrightnessBar greift ihn als
-normalen Kurzbefehl ab.
+The way out leads through the vendor software itself: map the key to the keystroke `⌥⌘↑` or
+`⌥⌘↓` there. It then generates that keystroke, and BrightnessBar picks it up as an ordinary
+shortcut.
 
-Beim Nachmessen fiel noch eine Kuriosität derselben Tastatur auf: sie meldet zu jeder
-Medientaste ein `NX_DEVICELCMDKEYMASK`-Bit mit, wodurch macOS eine gedrückte Command-Taste
-anzeigt, die niemand berührt hat. Die App wertet für Medientasten deshalb nur `⌥` aus und
-ignoriert die übrigen Modifier.
+One more curiosity of the same keyboard turned up while measuring: it reports an
+`NX_DEVICELCMDKEYMASK` bit with every media key, so macOS shows a Command key held down that
+nobody touched. For media keys the app therefore evaluates only `⌥` and ignores the remaining
+modifiers.
 
-### Diagnose
+### Diagnostics
 
-Bei Zweifeln, ob eine Taste überhaupt ankommt:
+If you are unsure whether a key arrives at all:
 
 ```bash
 defaults write de.webdrian.brightnessbar logMediaKeys -bool true
-# App neu starten, Tasten drücken, dann:
+# restart the app, press keys, then:
 cat ~/Library/Logs/BrightnessBar-diag.log
 defaults write de.webdrian.brightnessbar logMediaKeys -bool false
 ```
 
-Protokolliert werden Medientasten-Codes und **ausschließlich** die Funktionstasten F1-F12 —
-nichts, woraus sich Getipptes rekonstruieren ließe.
+What gets logged is media key codes and **only** the function keys F1–F12 — nothing from which
+typed text could be reconstructed.
 
-Mit gehaltenem `⌥` gibt die App die Tasten an macOS durch, damit `⌥` + Lautstärke weiterhin
-die Toneinstellungen öffnet.
+Holding `⌥` passes the keys through to macOS, so `⌥` + volume still opens the sound settings.
 
-*Beim Anmelden starten* legt einen LaunchAgent unter
-`~/Library/LaunchAgents/de.webdrian.brightnessbar.agent.plist` an. Der speichert den
-absoluten Pfad zur App: erst an den endgültigen Ort verschieben, dann aktivieren.
+*Beim Anmelden starten* (launch at login) creates a LaunchAgent at
+`~/Library/LaunchAgents/de.webdrian.brightnessbar.agent.plist`. It stores the absolute path to
+the app: move the app to its final location first, then switch this on.
 
-## Eingang umschalten
+## Switching inputs
 
-Meldet ein Monitor in seiner Selbstauskunft die Eingangswahl (VCP `0x60`) samt der Liste
-seiner Buchsen, erscheint im Menü eine Auswahl — etwa um zwischen Mac und Spielkonsole zu
-wechseln, ohne ans OSD-Rad zu greifen. Die Liste kommt vom Gerät selbst; geraten wird nichts,
-denn ein falscher Eingang macht den Bildschirm schwarz.
+If a monitor reports input selection (VCP `0x60`) along with the list of its sockets, a picker
+appears in the menu — to switch between a Mac and a games console, say, without reaching for
+the OSD wheel. The list comes from the device itself; nothing is guessed, because a wrong
+input turns the screen black.
 
-Vor dem Umschalten fragt die App nach, und das aus einem gemessenen Grund: **viele Monitore
-bedienen DDC nur für den gerade aktiven Eingang.** Auf dem Testgerät (LG UN880) ist der Weg
-zur Konsole ein Klick, der Weg zurück aber nur über das Monitormenü — sobald HDMI aktiv ist,
-erreicht der Mac das Gerät nicht mehr, obwohl die Kabelverbindung bestehen bleibt und macOS
-den Monitor weiter als angeschlossen führt.
+The app asks before switching, and for a measured reason: **many monitors serve DDC only for
+the input they are currently showing.** On the test machine (LG UN880) the way to the console
+is one click, but the way back only through the monitor's own menu — once HDMI is active the
+Mac can no longer reach the device, even though the cable stays connected and macOS still
+lists the monitor.
 
-Nach dem Umschalten liest die App den tatsächlichen Eingang zurück, statt den Erfolg
-anzunehmen. Bleibt der Monitor stehen, sagt sie das, anstatt etwas Falsches anzuzeigen.
+After switching, the app reads back the actual input instead of assuming success. If the
+monitor stayed where it was, it says so rather than displaying something untrue.
 
-Das ist keine theoretische Vorsicht. Das Testgerät — ein LG UN880 — führt `60(11 12 0F 10)`
-in seiner Selbstauskunft und **verwirft Schreibzugriffe darauf trotzdem**: mit anliegendem
-Signal an der Zielbuchse, mit anschließendem `Save Current Settings` (0x0C), bei
-einwandfreiem Kanal, während Helligkeit im selben Moment funktionierte. Bei diesem Hersteller
-ist das verbreitet. Eine gemeldete Fähigkeit ist eben eine Behauptung des Geräts, kein
-Versprechen — deshalb wird nachgemessen statt geglaubt.
+That is not theoretical caution. The test device lists `60(11 12 0F 10)` in its capability
+string and **discards writes to it anyway**: with a signal present on the target socket, with
+a subsequent `Save Current Settings` (0x0C), on a perfectly working channel, while brightness
+worked in the same breath. This is common with that vendor. A reported capability is a claim
+by the device, not a promise — which is why the app measures instead of believing.
 
-## Wie ein Monitor erkannt wird
+## How a monitor is recognised
 
-Nichts davon ist auf ein bestimmtes Gerät zugeschnitten. Die App findet Displays generisch
-über CoreGraphics und ordnet sie über die EDID-Daten der IORegistry zu; DDC/CI ist ein
-VESA-Standard, und die verwendeten VCP-Codes sind die Standardcodes. Maximalwerte werden vom
-Monitor **gelesen**, nicht angenommen — ein Gerät, das intern mit 0-255 arbeitet, wird
-dadurch richtig behandelt.
+None of this is tailored to a particular device. The app finds displays generically through
+CoreGraphics and matches them via the EDID data in the IORegistry; DDC/CI is a VESA standard
+and the VCP codes used are the standard ones. Maximum values are **read from** the monitor
+rather than assumed — a device working internally on a 0–255 scale is handled correctly as a
+result.
 
-Darüber hinaus fragt die App den Monitor, **was er kann**: VCP `0xF3` liefert eine
-Selbstauskunft, aus der hervorgeht, welche Funktionen er implementiert.
+Beyond that, the app asks the monitor **what it can do**: VCP `0xF3` returns a capability
+string describing which features it implements.
 
 ```
 (prot(monitor)type(lcd)model(UN880)cmds(01 02 03 0C E3 F3)
@@ -205,60 +197,59 @@ Selbstauskunft, aus der hervorgeht, welche Funktionen er implementiert.
  mccs_ver(2.1))
 ```
 
-Regler erscheinen daraufhin genau für die gemeldeten Funktionen, statt für eine fest
-verdrahtete Liste. Meldet ein Monitor eine Funktion, verweigert aber die Werteabfrage, wird
-der Regler trotzdem angeboten — ein Regler, der vielleicht wirkt, ist besser als keiner.
-Antwortet ein Gerät gar nicht auf `0xF3`, fällt die App auf direktes Durchprobieren zurück.
+Sliders then appear for exactly the reported features instead of a hard-wired list. If a
+monitor reports a feature but refuses to report its value, the slider is offered anyway — one
+that might work beats none at all. If a device does not answer `0xF3`, the app falls back to
+probing each code directly.
 
-Auch das Timing ist nicht fest: Monitore unterscheiden sich um mehr als eine Größenordnung
-darin, wie lange sie für eine Antwort brauchen. Statt einer eingemessenen Konstante
-durchläuft die App eine Leiter von 40 bis 320 ms, bis das Gerät antwortet, und merkt sich die
-Stufe. Selbstauskunft und Timing werden pro Monitor über die EDID-Identität zwischengespeichert,
-nicht über die Display-ID, die sich zwischen Neustarts ändert — der erste Kontakt kostete im
-Test 2,0 s, jeder weitere 0,7 s.
+The timing is not fixed either: monitors differ by more than an order of magnitude in how long
+they take to answer. Instead of one hand-tuned constant the app climbs a ladder from 40 to
+320 ms until the device replies, and remembers the step. Capability string and timing are
+cached per monitor by EDID identity rather than by display ID, which changes between reboots —
+first contact took 2.0 s in testing, every later one 0.7 s.
 
-**Voraussetzung ist Apple Silicon.** Der hier verwendete Weg über `IOAVService` existiert auf
-Intel-Macs nicht; dort liefe DDC über `IOFramebuffer`/`IOI2C`, was nicht implementiert ist.
+**Apple Silicon is a requirement.** The `IOAVService` route used here does not exist on Intel
+Macs; there DDC would go through `IOFramebuffer`/`IOI2C`, which is not implemented.
 
-## Welche Monitore funktionieren
+## Which monitors work
 
-Die App unterscheidet drei Fälle, weil sie sehr unterschiedlich zu behandeln sind.
+The app distinguishes three cases, because they need very different handling.
 
-1. **Antwortet auf Lesen und Schreiben.** Normalbetrieb, das Backlight wird geregelt.
-2. **Antwortet nicht auf Lesen, nimmt aber Befehle an.** Der Regler wird angezeigt und mit
-   „?" markiert; viele Geräte verweigern nur *Get*, nicht *Set*.
-3. **Der I²C-Kanal ist gar nicht erreichbar.** `IOAVServiceWriteI2C` scheitert schon beim
-   Absenden. Ein Regler, der vorgibt das Backlight zu steuern, wäre hier eine Lüge, also
-   schaltet die App auf Softwaredimmung um und schreibt das in die Zeile.
+1. **Answers reads and writes.** Normal operation, the backlight is being driven.
+2. **Does not answer reads but accepts commands.** The slider is shown and marked with "?";
+   many devices refuse only *Get*, not *Set*.
+3. **The I²C channel is not reachable at all.** `IOAVServiceWriteI2C` fails at the sending
+   stage. A slider claiming to drive the backlight would be a lie here, so the app switches to
+   gamma dimming and writes that into the row.
 
-Fall 3 liegt fast immer an der Strecke zwischen Mac und Monitor, nicht am Monitor. Auf dem
-Entwicklungsrechner trifft es zwei von drei Displays, und die IORegistry benennt die Ursache
-eindeutig: beide hängen hinter einem DisplayPort-Branch-Device, das funktionierende nicht.
+Case 3 is almost always about the path between Mac and monitor, not the monitor. On the
+development machine it affects two of three displays, and the IORegistry names the cause
+unambiguously: both sit behind a DisplayPort branch device, the working one does not.
 
-| Monitor | Branch-Device in der Strecke | DDC |
+| Monitor | Branch device in the path | DDC |
 |---|---|---|
-| LG HDR 4K, direkt an USB-C/DP | keins | funktioniert |
-| DELL U2719D | `pHDMIg` — DP→HDMI-Wandler | abgelehnt |
-| DELL U2719D | `Dp1.2` — DP-Branch | abgelehnt |
+| LG HDR 4K, straight into USB-C/DP | none | works |
+| DELL U2719D | `pHDMIg` — DP→HDMI converter | refused |
+| DELL U2719D | `Dp1.2` — DP branch | refused |
 
-Gemessen mit 27 Parametervarianten pro Monitor (ein bis drei Sendevorgänge, 40/150/400 ms
-Wartezeit, VCP `0x10`, `0xDF`, `0x60`): beim LG jedes Mal eine gültige Antwort, bei beiden
-Dells jedes Mal Fehler `0xE0114000` bereits beim Schreiben und ein Antwortpuffer aus lauter
-Nullen. Timing, Protokoll und Parameter sind als Ursache damit ausgeschlossen.
+Measured with 27 parameter variations per monitor (one to three sends, 40/150/400 ms wait, VCP
+`0x10`, `0xDF`, `0x60`): a valid answer every time on the LG, and on both Dells error
+`0xE0114000` at the write stage every time, plus a reply buffer of nothing but zeros. Timing,
+protocol and parameters are therefore ruled out as the cause.
 
-Was hilft:
+What helps:
 
-* **Verbindung ohne Protokollwandler** — USB-C (DP Alt Mode) auf DisplayPort. Adapter mit
-  Wandlerchip, DP-Hubs, MST-Splitter und KVM-Switches leiten den I²C-Kanal meist nicht
-  durch.
-* **DDC/CI im OSD-Menü aktivieren.** Beim U2719D unter *Menu → Others → DDC/CI*. Das allein
-  reicht aber nicht, wenn schon die Strecke den Kanal nicht führt.
+* **A connection without a protocol converter** — USB-C (DP Alt Mode) to DisplayPort. Adapters
+  with a converter chip, DP hubs, MST splitters and KVM switches mostly do not carry the I²C
+  channel.
+* **Enabling DDC/CI in the OSD menu.** On the U2719D under *Menu → Others → DDC/CI*. That
+  alone is not enough if the path itself does not carry the channel.
 
-## Signatur und Berechtigungen
+## Signature and permissions
 
-macOS knüpft die Bedienungshilfen-Freigabe an die Code-Signatur. Bei ad-hoc-Signierung ist
-das der Hash des Binaries selbst — jeder Neubau macht die Freigabe also ungültig, ohne dass
-man es sieht. Ein einmalig erzeugtes, selbst signiertes Zertifikat löst das:
+macOS ties the Accessibility permission to the code signature. With ad-hoc signing that is the
+hash of the binary itself — so every rebuild invalidates the permission without any visible
+sign. A self-signed certificate, created once, solves this:
 
 ```bash
 ./Tools/make-signing-identity.sh
@@ -266,113 +257,113 @@ tccutil reset Accessibility de.webdrian.brightnessbar
 ./build.sh --install
 ```
 
-Danach lautet die hinterlegte Bedingung `identifier "de.webdrian.brightnessbar" and
-certificate root = H"…"` statt eines Binary-Hashes, und die Freigabe übersteht jeden Neubau.
-`build.sh` findet das Zertifikat von selbst und fällt ohne es auf ad-hoc zurück.
+The stored condition then reads `identifier "de.webdrian.brightnessbar" and certificate
+root = H"…"` instead of a binary hash, and the permission survives every rebuild. `build.sh`
+finds the certificate on its own and falls back to ad-hoc without it.
 
-Gatekeeper wird davon **nicht** besser — dafür braucht es eine Developer-ID und
-Notarisierung. Nur die Berechtigung wird stabil.
+Gatekeeper does **not** get better from this — that needs a Developer ID and notarization.
+Only the permission becomes stable.
 
-Wieder entfernen:
+To remove it again:
 
 ```bash
 security delete-identity -c "BrightnessBar Self-Signed"
 ```
 
-## Softwaredimmung
+## Gamma dimming
 
-Für Monitore aus Fall 3 skaliert die App die Übertragungsfunktion des Displays
-(`CGSetDisplayTransferByFormula`), statt das Backlight zu regeln. Das ist ausdrücklich nicht
-dasselbe:
+For monitors in case 3 the app scales the display's transfer function
+(`CGSetDisplayTransferByFormula`) instead of driving the backlight. This is explicitly not the
+same thing:
 
-* Das Backlight leuchtet weiter mit voller Leistung — es wird kein Strom gespart.
-* Sehr dunkle Einstellungen kosten Farbauflösung.
-* 0 % entspricht Faktor 0,15, nicht Schwarz. Ein Display, das man nicht mehr sieht, kann man
-  auch nicht mehr zurückstellen.
+* The backlight keeps burning at full power — nothing is saved.
+* Very dark settings cost colour resolution.
+* 0 % corresponds to a factor of 0.15, not black. A display you can no longer see is a display
+  you can no longer set back.
 
-Der Schalter *Softwaredimmung, wo DDC fehlt* ist standardmäßig an, weil die betroffenen
-Monitore sonst überhaupt nicht regelbar wären. Ausgeschaltet stellt die App alle
-Gamma-Tabellen wieder her und listet die Displays als nicht steuerbar.
+The *Softwaredimmung, wo DDC fehlt* switch is on by default, because the affected monitors
+would otherwise not be adjustable at all. Switched off, the app restores every gamma table and
+lists those displays as not controllable.
 
-Eine Gamma-Tabelle überlebt den Prozess, der sie gesetzt hat. Beim Beenden räumt die App
-deshalb auf. Nach Aufwachen oder einer Display-Umkonfiguration setzt sie den Wert neu, weil
-macOS die Tabelle dabei verwirft.
+A gamma table outlives the process that set it, so the app cleans up on quit. After waking or
+a display reconfiguration it sets the value again, because macOS discards the table then.
 
-## Aufbau
+## Layout
 
-| Datei | Inhalt |
+| File | Contents |
 |---|---|
-| `Sources/DDC.swift` | DDC/CI über `IOAVService`: Paketformat, Prüfsummen, Timing, Coalescing |
-| `Sources/DisplayRegistry.swift` | ordnet CoreGraphics-Displays über EDID und DCP-Instanz den I²C-Kanälen zu |
-| `Sources/Capabilities.swift` | liest und deutet die Selbstauskunft des Monitors, samt Cache |
-| `Sources/DisplayController.swift` | Display-Modell, Probing, Hotplug- und Aufwach-Behandlung |
-| `Sources/SoftwareDimming.swift` | Gamma-Fallback für Displays ohne erreichbaren DDC-Kanal |
-| `Sources/BuiltInBrightness.swift` | `DisplayServices`-Pfad für interne und Apple-Displays |
-| `Sources/Hotkeys.swift` | globale Kurzbefehle (Carbon), LaunchAgent |
-| `Sources/MediaKeys.swift` | Event-Tap für die Helligkeits- und Lautstärketasten |
-| `Sources/MenuUI.swift` | SwiftUI-Menü, Monitorauswahl, eigener Regler |
-| `Sources/Appearance.swift` | wählbare Akzentfarbe, getrennt von den Statusfarben |
-| `Sources/SettingsWindow.swift` | Einstellungsfenster samt Erklärung der Kurzbefehle |
-| `Sources/AboutWindow.swift` | Info-Fenster und App-Metadaten |
-| `Sources/DockVisibility.swift` | Dock-Symbol ein- und ausschalten |
-| `Sources/App.swift` | `MenuBarExtra`-Einstiegspunkt, Programmmenü |
-| `Tools/make-icon.sh` | erzeugt `Resources/AppIcon.icns` aus Code |
-| `Tools/make-signing-identity.sh` | erzeugt das selbst signierte Zertifikat für stabile Berechtigungen |
+| `Sources/DDC.swift` | DDC/CI over `IOAVService`: packet format, checksums, timing, coalescing |
+| `Sources/DisplayRegistry.swift` | matches CoreGraphics displays to I²C channels via EDID and DCP instance |
+| `Sources/Capabilities.swift` | reads and interprets the monitor's capability string, plus cache |
+| `Sources/DisplayController.swift` | display model, probing, hotplug and wake handling |
+| `Sources/SoftwareDimming.swift` | gamma fallback for displays with no reachable DDC channel |
+| `Sources/BuiltInBrightness.swift` | `DisplayServices` path for internal and Apple displays |
+| `Sources/AudioOutput.swift` | which device the sound is going to, and whether macOS can set its volume |
+| `Sources/Hotkeys.swift` | global shortcuts (Carbon), LaunchAgent |
+| `Sources/MediaKeys.swift` | event tap for the keyboard's media keys |
+| `Sources/MenuUI.swift` | SwiftUI menu, monitor picker, hand-drawn slider |
+| `Sources/SettingsWindow.swift` | settings window including the shortcut reference |
+| `Sources/AboutWindow.swift` | About window and app metadata |
+| `Sources/Appearance.swift` | selectable accent colour, kept apart from the status colours |
+| `Sources/DockVisibility.swift` | turning the Dock icon on and off |
+| `Sources/App.swift` | `MenuBarExtra` entry point, main menu |
+| `Tools/make-icon.sh` | generates `Resources/AppIcon.icns` from code |
+| `Tools/make-signing-identity.sh` | creates the self-signed certificate for stable permissions |
 
-## Technische Notizen
+## Technical notes
 
-Auf Apple Silicon gibt es keine öffentliche I²C-Schnittstelle für externe Displays. Der Weg
-führt über `IOAVServiceCreateWithService`, `IOAVServiceWriteI2C` und `IOAVServiceReadI2C` in
-IOKit — undokumentiert und in keinem Header deklariert, deshalb werden die Symbole zur
-Laufzeit über `dlsym` aufgelöst. Fehlen sie, meldet die App die Displays als nicht steuerbar
-statt abzustürzen.
+Apple Silicon has no public I²C interface for external displays. The route goes through
+`IOAVServiceCreateWithService`, `IOAVServiceWriteI2C` and `IOAVServiceReadI2C` in IOKit —
+undocumented and declared in no header, so the symbols are resolved at runtime via `dlsym`. If
+they are missing, the app reports the displays as not controllable rather than crashing.
 
-Die Zuordnung Monitor → I²C-Kanal läuft über die IORegistry: der Framebuffer-Knoten
-(`disp0`, `dispext0`, …) trägt die EDID-Daten, über die er per Hersteller-, Produkt- und
-Seriennummer eindeutig einer `CGDirectDisplayID` zugeordnet wird. Der zugehörige
-`DCPAVServiceProxy` hängt unter der passenden DCP-Instanz (`dcp` → `disp0`,
+Matching monitor to I²C channel runs through the IORegistry: the framebuffer node (`disp0`,
+`dispext0`, …) carries the EDID data, by which it is matched unambiguously to a
+`CGDirectDisplayID` via vendor, product and serial number. The corresponding
+`DCPAVServiceProxy` hangs under the matching DCP instance (`dcp` → `disp0`,
 `dcpext0` → `dispext0`).
 
-Zwei Eigenheiten, die beim Messen auffielen und im Code berücksichtigt werden:
+Two quirks that showed up while measuring and are accounted for in the code:
 
-1. **Eine Leseanfrage muss zweimal gesendet werden.** Bei einmaligem Senden liefert der
-   getestete Monitor jedes Mal einen unveränderten Altbestand seines Puffers zurück; bei
-   zweimaligem Senden antwortet er zuverlässig — 4 von 4 gültigen Antworten statt 0 von 6.
-2. **`IOAVServiceReadI2C` überschreibt Byte 1 der Antwort** — das Längenbyte `0x88` — mit dem
-   gelesenen I²C-Offset. Vor der Prüfsummenkontrolle wird es wieder eingesetzt; die Prüfsumme
-   entsteht mit Startwert `0x50` über die Antwort.
+1. **A read request has to be sent twice.** With a single request the monitor under test
+   returned an unchanged stale copy of its buffer every time; with two it answered reliably —
+   4 valid answers out of 4 instead of 0 out of 6.
+2. **`IOAVServiceReadI2C` overwrites byte 1 of the reply** — the length byte `0x88` — with the
+   I²C offset it read from. It is put back before the checksum is verified; the checksum is
+   formed with seed `0x50` over the reply.
 
-Schreibvorgänge werden zusammengefasst: beim Ziehen eines Reglers geht nur der jeweils
-neueste Wert auf den Bus, damit der I²C-Kanal nicht überläuft. 31 Slider-Updates in 0,38 s
-landeten im Test korrekt auf dem Endwert.
+The same quirk complicates reading the capability string, where the length is not a known
+constant. There it is recovered through the checksum, which validates the reply at the same
+time.
 
-Die Medientasten kommen nicht als normale Tastendrücke an, sondern als
-`NSSystemDefined`-Events mit Subtype 8. Die Tastenidentität steckt in `data1`: Tastencode in
-den oberen 16 Bit, darunter der Tastenzustand in Bit 8-15 (`0x0A` heißt gedrückt) und das
-Wiederholungs-Flag in Bit 0. Ein `CGEvent`-Tap mit `.defaultTap` kann sie nicht nur lesen,
-sondern auch schlucken — nötig, damit macOS nicht zusätzlich reagiert. Wird eine Taste nicht
-behandelt, geht sie unverändert weiter.
+Writes are coalesced: while a slider is being dragged only the newest value goes onto the bus,
+so the I²C channel does not overflow. 31 slider updates in 0.38 s landed on the correct final
+value in testing.
 
-Beim Probing wird zwischen „Monitor schweigt" und „Kanal nicht verfügbar" unterschieden
-(`DDCProbeResult`). Nur der zweite Fall führt zur Softwaredimmung, und er wird nicht
-wiederholt — Retries können daran nichts ändern.
+Probing distinguishes "monitor is silent" from "channel unavailable" (`DDCProbeResult`). Only
+the second case leads to gamma dimming, and it is not retried — retries cannot change it.
 
-## Getestet auf
+## Tested on
 
-Mac Studio M4 Max, macOS 26.5, Xcode 26.6. LG HDR 4K über DisplayPort: Lesen und Schreiben
-von Helligkeit, Kontrast, Lautstärke und Stummschaltung funktionieren, ein gesetzter Wert
-bleibt stabil. Zwei DELL U2719D hinter Wandlern: über DDC nicht erreichbar, laufen über
-Softwaredimmung.
+Mac Studio M4 Max, macOS 26.5, Xcode 26.6. LG HDR 4K over DisplayPort: reading and writing
+brightness, contrast, volume and mute all work, and a value once set stays put. Two DELL
+U2719D behind converters: not reachable over DDC, running on gamma dimming.
 
-Der `DisplayServices`-Pfad für interne Panels ist implementiert, aber **ungeprüft** — ein Mac
-Studio hat kein internes Display. Kurzbefehle und Medientasten sind inzwischen am echten Gerät bestätigt: `⌥⌘↑`/`⌥⌘↓` lösen
-aus und werden verarbeitet, Lautstärke und Stummschaltung laufen über die Tastatur. Die
-Helligkeitstasten hängen von der Tastatur ab — siehe „Wenn eine Taste gar nichts auslöst".
+Shortcuts and media keys are confirmed on real hardware: `⌥⌘↑`/`⌥⌘↓` fire and are handled,
+volume and mute work from the keyboard. The brightness keys depend on the keyboard — see "When
+a key does nothing at all".
 
-## Autor
+The `DisplayServices` path for internal panels is implemented but **untested** — a Mac Studio
+has no internal display.
+
+Three monitors behaved in three different ways here. That is the best warning there is against
+concluding from one device to all of them. If you try it on other hardware, an issue reporting
+what worked and what did not is genuinely useful.
+
+## Author
 
 © 2026 Webdrian — [webdrian.de](https://webdrian.de)
 
-## Lizenz
+## License
 
-MIT — siehe [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).

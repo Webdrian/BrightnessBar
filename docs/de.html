@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BrightnessBar — external monitor brightness from the macOS menu bar</title>
-<meta name="description" content="macOS menu bar app that sets brightness, contrast and volume of external monitors over DDC/CI, on the display itself.">
+<title>BrightnessBar — Helligkeit externer Monitore aus der Menüleiste</title>
+<meta name="description" content="macOS-Menüleisten-App, die Helligkeit, Kontrast und Lautstärke externer Monitore über DDC/CI direkt am Gerät regelt.">
 <style>
   :root {
     --bg: #0d1117;
@@ -107,7 +107,7 @@
 </head>
 <body>
 <div class="wrap">
-  <nav class="lang"><span>English</span> · <a href="de.html">Deutsch</a></nav>
+  <nav class="lang"><a href="index.html">English</a> · <span>Deutsch</span></nav>
 
   <section class="top">
     <div>
@@ -118,7 +118,7 @@
         </div>
       </div>
 
-      <p class="tagline">Brightness, contrast and volume of external monitors — on the display itself.</p>
+      <p class="tagline">Helligkeit, Kontrast und Lautstärke externer Monitore — direkt am Gerät.</p>
 
       <div class="badges">
         <span class="badge">macOS 14+</span>
@@ -129,37 +129,37 @@
       </div>
 
       <p class="lead">
-        macOS only adjusts brightness on built-in panels and Apple's own displays. On an
-        ordinary external monitor the sliders do nothing. BrightnessBar talks to the monitor
-        <strong>directly over the I²C channel of its display connection</strong> and sets the
-        same values its OSD menu does.
+        macOS regelt die Helligkeit nur bei internen Panels und Apples eigenen Displays. Bei
+        einem gewöhnlichen externen Monitor sind die Schieber wirkungslos.
+        BrightnessBar spricht den Monitor <strong>direkt über den I²C-Kanal seines
+        Displayanschlusses an</strong> und setzt dort dieselben Werte wie sein OSD-Menü.
       </p>
 
       <div class="icons">
-        <div><span class="glyph">☀️</span>Brightness</div>
-        <div><span class="glyph">🌓</span>Contrast</div>
-        <div><span class="glyph">🔊</span>Volume</div>
-        <div><span class="glyph">🖥️</span>Input</div>
+        <div><span class="glyph">☀️</span>Helligkeit</div>
+        <div><span class="glyph">🌓</span>Kontrast</div>
+        <div><span class="glyph">🔊</span>Lautstärke</div>
+        <div><span class="glyph">🖥️</span>Eingang</div>
       </div>
 
       <div class="cta">
         <a class="btn primary" href="https://github.com/Webdrian/BrightnessBar/releases/latest">Download</a>
-        <a class="btn ghost" href="https://github.com/Webdrian/BrightnessBar">Source on GitHub</a>
+        <a class="btn ghost" href="https://github.com/Webdrian/BrightnessBar">Quelltext auf GitHub</a>
       </div>
       <p class="req">
-        Requires macOS 14 or later and a Mac with Apple Silicon. Not notarized — right-click
-        → Open on first launch. The app's interface is in German.
+        Braucht macOS 14 oder neuer und einen Mac mit Apple Silicon. Nicht notarisiert —
+        beim ersten Start Rechtsklick → Öffnen.
       </p>
     </div>
 
     <div class="screens">
       <figure>
-        <img src="menu-light.png" alt="Menu in light appearance">
-        <figcaption>Light</figcaption>
+        <img src="menu-light.png" alt="Menü im hellen Erscheinungsbild">
+        <figcaption>Hell</figcaption>
       </figure>
       <figure>
-        <img src="menu.png" alt="Menu in dark appearance">
-        <figcaption>Dark</figcaption>
+        <img src="menu.png" alt="Menü im dunklen Erscheinungsbild">
+        <figcaption>Dunkel</figcaption>
       </figure>
     </div>
   </section>
@@ -167,66 +167,67 @@
   <section class="cards">
 
     <div class="card">
-      <h3><span class="glyph">☀️</span> On the monitor itself</h3>
+      <h3><span class="glyph">☀️</span> Direkt am Monitor</h3>
       <p>
-        Sets brightness, contrast and volume over DDC/CI — the same values the OSD menu sets.
-        The backlight really does go down; the image is not merely darkened.
+        Regelt Helligkeit, Kontrast und Lautstärke über DDC/CI — dieselben Werte, die das
+        OSD-Menü setzt. Das Backlight wird wirklich dunkler, das Bild nicht nur abgedunkelt.
       </p>
     </div>
 
     <div class="card">
-      <h3><span class="glyph">🖥️</span> Several monitors</h3>
+      <h3><span class="glyph">🖥️</span> Mehrere Monitore</h3>
       <p>
-        Finds every connected display on its own and shows, per device, how it is being
-        driven.
+        Findet alle angeschlossenen Displays selbst und zeigt pro Gerät, wie es angesteuert
+        wird.
       </p>
       <p class="note">
-        <span class="dot g"></span>Backlight over DDC/CI<br>
-        <span class="dot a"></span>Gamma dimming as a fallback
+        <span class="dot g"></span>Backlight über DDC/CI<br>
+        <span class="dot a"></span>Softwaredimmung als Rückfallebene
       </p>
     </div>
 
     <div class="card">
-      <h3><span class="glyph">⌨️</span> Shortcuts</h3>
+      <h3><span class="glyph">⌨️</span> Tastenkürzel</h3>
       <p>
-        Act on the monitor under the pointer, system-wide and without extra permissions.
+        Wirken auf den Monitor unter dem Mauszeiger, systemweit und ohne Zusatzrechte.
       </p>
       <p class="note">
-        <span class="combo"><kbd>⌥</kbd><kbd>⌘</kbd><kbd>↑</kbd> brighter</span>
-        <span class="combo"><kbd>⌥</kbd><kbd>⌘</kbd><kbd>↓</kbd> darker</span>
-        <span class="combo">with <kbd>⇧</kbd> in finer steps</span>
+        <span class="combo"><kbd>⌥</kbd><kbd>⌘</kbd><kbd>↑</kbd> heller</span>
+        <span class="combo"><kbd>⌥</kbd><kbd>⌘</kbd><kbd>↓</kbd> dunkler</span>
+        <span class="combo">mit <kbd>⇧</kbd> in feineren Schritten</span>
       </p>
     </div>
 
     <div class="card">
-      <h3><span class="glyph">🔊</span> Sound from the monitor</h3>
+      <h3><span class="glyph">🔊</span> Ton vom Monitor</h3>
       <p>
-        Monitor speakers over DisplayPort or HDMI often report no volume control to macOS at
-        all — the keys then just show the crossed-out symbol. Over DDC it works anyway.
+        Monitorlautsprecher über DisplayPort oder HDMI melden macOS oft gar keine
+        Lautstärkeregelung — die Tasten zeigen dann nur das durchgestrichene Symbol. Über DDC
+        funktioniert es trotzdem.
       </p>
       <p class="note">
-        The volume keys only take effect when the sound is actually going to the monitor.
-        Headphones and speakers stay with macOS.
+        Die Lautstärketasten greifen nur, wenn der Ton auch wirklich zum Monitor geht.
+        Kopfhörer und Lautsprecher bleiben bei macOS.
       </p>
     </div>
 
     <div class="card">
-      <h3><span class="glyph">🔒</span> Sparing with permissions</h3>
+      <h3><span class="glyph">🔒</span> Sparsam mit Rechten</h3>
       <p>
-        Brightness, contrast, volume and the shortcuts all run without any permission.
-        Screen Recording is never requested.
+        Helligkeit, Kontrast, Lautstärke und die Tastenkürzel laufen ohne jede Berechtigung.
+        Bildschirmaufnahme wird nie verlangt.
       </p>
       <p class="note">
-        Only mapping the keyboard's <em>media keys</em> as well needs a one-time Accessibility
-        exception. That feature is off by default.
+        Nur wer zusätzlich die <em>Medientasten</em> der Tastatur belegen will, erteilt einmalig
+        die Freigabe für Bedienungshilfen. Die Funktion ist standardmäßig aus.
       </p>
     </div>
 
     <div class="card">
-      <h3><span class="glyph">⚙️</span> Configurable</h3>
+      <h3><span class="glyph">⚙️</span> Einstellbar</h3>
       <p>
-        Launch at login, optional Dock icon, slider colour, gamma dimming as a fallback — and
-        a settings window that explains every option.
+        Anmeldestart, optionales Dock-Symbol, Farbe der Regler, Softwaredimmung als
+        Rückfallebene — und ein Einstellungsfenster, das jede Option erklärt.
       </p>
     </div>
 
@@ -234,16 +235,16 @@
 
   <div class="strip">
     <span>Swift</span>
-    <span>Native macOS app</span>
-    <span>DDC/CI over I²C</span>
-    <span>No Screen Recording</span>
-    <span>Accessibility optional only</span>
-    <span>MIT licence</span>
+    <span>Native macOS-App</span>
+    <span>DDC/CI über I²C</span>
+    <span>Keine Bildschirmaufnahme</span>
+    <span>Bedienungshilfen nur optional</span>
+    <span>MIT-Lizenz</span>
   </div>
 
   <footer>
     © 2026 Webdrian · <a href="https://webdrian.de">webdrian.de</a> ·
-    <a href="https://github.com/Webdrian/BrightnessBar">Source</a>
+    <a href="https://github.com/Webdrian/BrightnessBar">Quelltext</a>
   </footer>
 
 </div>
