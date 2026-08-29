@@ -66,7 +66,7 @@
 
   /* Cards */
   .cards {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
     gap: 16px; margin: 64px 0 0;
   }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 13px; padding: 20px; }
@@ -81,6 +81,8 @@
     border: 1px solid var(--line); background: var(--panel-2);
     font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text);
   }
+  .combo { display: block; margin-bottom: 6px; white-space: nowrap; }
+  .combo:last-child { margin-bottom: 0; white-space: normal; }
   .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; margin-right: 7px; }
   .dot.g { background: var(--green); } .dot.a { background: var(--amber); }
 
@@ -131,7 +133,7 @@
 
       <div class="icons">
         <div><span class="glyph">☀️</span>Helligkeit</div>
-        <div><span class="glyph">◐</span>Kontrast</div>
+        <div><span class="glyph">🌓</span>Kontrast</div>
         <div><span class="glyph">🔊</span>Lautstärke</div>
         <div><span class="glyph">🖥️</span>Eingang</div>
       </div>
@@ -186,9 +188,9 @@
         Wirken auf den Monitor unter dem Mauszeiger, systemweit und ohne Zusatzrechte.
       </p>
       <p class="note">
-        <kbd>⌥</kbd><kbd>⌘</kbd><kbd>↑</kbd> heller &nbsp;·&nbsp;
-        <kbd>⌥</kbd><kbd>⌘</kbd><kbd>↓</kbd> dunkler<br>
-        mit <kbd>⇧</kbd> in feineren Schritten
+        <span class="combo"><kbd>⌥</kbd><kbd>⌘</kbd><kbd>↑</kbd> heller</span>
+        <span class="combo"><kbd>⌥</kbd><kbd>⌘</kbd><kbd>↓</kbd> dunkler</span>
+        <span class="combo">mit <kbd>⇧</kbd> in feineren Schritten</span>
       </p>
     </div>
 
