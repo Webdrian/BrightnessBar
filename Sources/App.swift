@@ -42,6 +42,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DiagLog.write("--- Start: eingeschaltet=\(MediaKeyTap.isEnabled) " +
                           "Bedienungshilfen=\(MediaKeyTap.hasPermission) " +
                           "Tap=\(MediaKeyTap.shared.isRunning)")
+            // Which language the interface actually resolved to. Cheap to record and the first
+            // thing worth knowing when someone reports the wrong one.
+            DiagLog.write("    Sprache: bevorzugt=\(Bundle.main.preferredLocalizations) " +
+                          "verfügbar=\(Bundle.main.localizations.sorted()) " +
+                          "Beispiele=[\(L("Helligkeit")), \(L("Einstellungen")), \(L("Nicht steuerbar"))]")
         }
     }
 

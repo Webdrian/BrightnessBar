@@ -152,6 +152,9 @@ defaults write de.webdrian.brightnessbar logMediaKeys -bool false
 What gets logged is media key codes and **only** the function keys F1–F12 — nothing from which
 typed text could be reconstructed.
 
+The same log records which language the interface resolved to at launch, which is the first
+thing worth knowing when someone reports the wrong one.
+
 Holding `⌥` passes the keys through to macOS, so `⌥` + volume still opens the sound settings.
 
 *Launch at login* creates a LaunchAgent at
