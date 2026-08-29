@@ -22,6 +22,12 @@ swiftc \
 cp Resources/Info.plist "$BUNDLE/Contents/Info.plist"
 printf 'APPL????' > "$BUNDLE/Contents/PkgInfo"
 
+# Sprachtabellen: ohne sie fällt jede Zeichenkette auf ihren Schlüssel zurück — also aufs Deutsche.
+for LPROJ in Resources/*.lproj; do
+  [ -d "$LPROJ" ] || continue
+  cp -R "$LPROJ" "$BUNDLE/Contents/Resources/"
+done
+
 if [ -f Resources/AppIcon.icns ]; then
   cp Resources/AppIcon.icns "$BUNDLE/Contents/Resources/AppIcon.icns"
 else

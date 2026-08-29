@@ -49,7 +49,7 @@ final class AboutWindowController {
 
         let hosting = NSHostingController(rootView: AboutView())
         let window = NSWindow(contentViewController: hosting)
-        window.title = "Über \(AppInfo.name)"
+        window.title = L("Über %@", AppInfo.name)
         window.styleMask = [.titled, .closable, .fullSizeContentView]
         window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false
@@ -72,7 +72,7 @@ struct AboutView: View {
                 VStack(spacing: 3) {
                     Text(AppInfo.name)
                         .font(.system(size: 17, weight: .semibold))
-                    Text("Version \(AppInfo.version) (\(AppInfo.build))")
+                    Text(verbatim: L("Version %@ (%@)", AppInfo.version, AppInfo.build))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
@@ -134,7 +134,7 @@ struct AboutView: View {
             Text(keys)
                 .font(.system(size: 11, design: .monospaced))
                 .frame(width: 58, alignment: .leading)
-            Text(description)
+            Text(L(description))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
             Spacer()

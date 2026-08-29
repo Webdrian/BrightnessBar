@@ -34,6 +34,7 @@ Lautstärke.
 * Mehrere Monitore koppeln und gemeinsam regeln
 * Softwaredimmung als Fallback, wenn der DDC-Kanal nicht erreichbar ist
 * Anmeldestart, optionales Dock-Symbol, Info-Fenster
+* Deutsche und englische Oberfläche, folgt der Systemsprache
 * Braucht **keine** Bedienungshilfen- oder Bildschirmaufnahme-Rechte
 
 ## Installation

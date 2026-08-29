@@ -138,6 +138,9 @@ final class ManagedDisplay: ObservableObject, Identifiable {
     let id: CGDirectDisplayID
     let name: String
     let serialText: String
+    /// AirPlay screens carry no control channel at all — worth distinguishing from a monitor
+    /// whose cable path merely swallows DDC.
+    let isAirPlay: Bool
     let backend: ControlBackend
     let brightnessMax: UInt16
     let contrastMax: UInt16
@@ -177,6 +180,7 @@ final class ManagedDisplay: ObservableObject, Identifiable {
         self.id = discovered.displayID
         self.name = discovered.name
         self.serialText = discovered.serialText
+        self.isAirPlay = discovered.isAirPlay
         self.brightnessMax = probed.brightnessMax
         self.contrastMax = probed.contrastMax
         // A monitor may list a feature yet refuse to report its value. Trust the claim: a
@@ -244,17 +248,18 @@ final class ManagedDisplay: ObservableObject, Identifiable {
 
     /// How this display is being driven, in one short line for the menu header.
     var statusText: String {
-        if busDidFail { return "Verbindung verloren" }
+        if busDidFail { return L("Verbindung verloren") }
+        if isAirPlay { return L("AirPlay — kein DDC/CI möglich") }
         switch backend {
         case .ddc:
-            let base = readConfirmed ? "DDC/CI verbunden" : "DDC/CI, keine Rückmeldung"
+            let base = readConfirmed ? L("DDC/CI verbunden") : L("DDC/CI, keine Rückmeldung")
             // Showing the reported MCCS version makes it visible that the monitor was asked
             // what it can do, rather than assumed.
             if let version = capabilities?.mccsVersion { return "\(base) · MCCS \(version)" }
             return base
-        case .builtIn: return "Internes Display"
-        case .software: return "Softwaredimmung"
-        case .unavailable: return "Nicht steuerbar"
+        case .builtIn: return L("Internes Display")
+        case .software: return L("Softwaredimmung")
+        case .unavailable: return L("Nicht steuerbar")
         }
     }
 

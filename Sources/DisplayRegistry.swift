@@ -1,6 +1,7 @@
 import Foundation
 import IOKit
 import CoreGraphics
+import AppKit
 
 // MARK: - IORegistry helpers
 
@@ -60,6 +61,8 @@ struct DiscoveredDisplay {
     let serialText: String
     let framebufferKey: String
     let isBuiltIn: Bool
+    /// True for AirPlay screens, which have no physical link and therefore no DDC channel.
+    let isAirPlay: Bool
     let avService: CFTypeRef?
 
     /// Stable across reboots and reconnections, unlike `displayID` — used to key everything
@@ -141,14 +144,31 @@ enum DisplayRegistry {
                 serialText: info?.serialText ?? "",
                 framebufferKey: key,
                 isBuiltIn: builtIn,
+                isAirPlay: isAirPlay(displayID),
                 avService: builtIn ? nil : avService
             ))
         }
         return results
     }
 
+    /// Not every display publishes EDID data. An AirPlay screen has no physical connection at
+    /// all, so there is nothing to read — but macOS still knows what to call it, and a name
+    /// beats "Display 8".
     private static func fallbackName(for displayID: CGDirectDisplayID, builtIn: Bool) -> String {
-        if builtIn { return "Internes Display" }
-        return "Display \(displayID)"
+        if builtIn { return L("Internes Display") }
+        if let name = screenName(for: displayID), !name.isEmpty { return name }
+        return L("Display %u", displayID)
+    }
+
+    private static func screenName(for displayID: CGDirectDisplayID) -> String? {
+        NSScreen.screens.first {
+            ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value == displayID
+        }?.localizedName
+    }
+
+    /// AirPlay screens identify themselves with the four-character codes "aapl" and "airp".
+    /// Worth telling apart: their lack of DDC is not a cabling problem anyone could fix.
+    static func isAirPlay(_ displayID: CGDirectDisplayID) -> Bool {
+        CGDisplayVendorNumber(displayID) == 0x6161_706C && CGDisplayModelNumber(displayID) == 0x6169_7270
     }
 }
