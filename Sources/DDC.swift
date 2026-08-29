@@ -44,11 +44,11 @@ enum VCPCode: UInt8, CaseIterable {
 
     var label: String {
         switch self {
-        case .brightness: return "Helligkeit"
-        case .contrast: return "Kontrast"
-        case .inputSource: return "Eingang"
-        case .speakerVolume: return "Lautstärke"
-        case .audioMute: return "Stumm"
+        case .brightness: return L("Helligkeit")
+        case .contrast: return L("Kontrast")
+        case .inputSource: return L("Eingang")
+        case .speakerVolume: return L("Lautstärke")
+        case .audioMute: return L("Stumm")
         }
     }
 }
@@ -71,7 +71,7 @@ enum InputSource {
     ]
 
     static func name(for value: UInt8) -> String {
-        names[value] ?? String(format: "Eingang 0x%02X", value)
+        names[value] ?? L("Eingang 0x%02X", value)
     }
 }
 

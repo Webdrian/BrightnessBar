@@ -10,9 +10,8 @@ macOS gives you no slider for at all.
   <img src="docs/banner-en-light.png" width="960" alt="BrightnessBar: menu with sliders for brightness, contrast and volume">
 </picture>
 
-> **Note:** the app's interface is in German. Everything else — the code, this README, the
-> commit history — is in English. If you would like an English UI, open an issue; it is a
-> question of translating one file's worth of strings.
+> **Language:** the interface follows your system language — German by default, English when
+> macOS is set to English. Both string tables ship with the app.
 
 ## What this is for
 
@@ -33,6 +32,7 @@ BrightnessBar talks to the monitor directly over the I²C channel of its display
 * Link several monitors and adjust them together
 * Gamma-based dimming as a fallback when the DDC channel is unreachable
 * Launch at login, optional Dock icon, About window
+* German and English interface, following the system language
 * Needs **no** Accessibility or Screen Recording permission for any of the above
 
 ## Installation
@@ -75,12 +75,12 @@ how it is being driven — green means backlight over DDC/CI, amber means gamma 
 means not controllable at all.
 
 <p align="center">
-  <img src="docs/menu.png" width="300" alt="Menu with monitor picker and status dots">
+  <img src="docs/menu-en.png" width="300" alt="Menu with monitor picker and status dots">
   &nbsp;&nbsp;&nbsp;
-  <img src="docs/settings.png" width="430" alt="Settings window with the shortcuts explained">
+  <img src="docs/settings-en.png" width="430" alt="Settings window with the shortcuts explained">
 </p>
 
-Every switch, plus an explanation of the shortcuts, lives under *Einstellungen …* (Settings).
+Every switch, plus an explanation of the shortcuts, lives under *Settings …*.
 The **slider colour** is configurable there as well — ten presets or a colour of your own; the
 system accent colour is the default. The status dots stay as they are, because green, amber
 and red carry meaning.
@@ -91,13 +91,13 @@ and red carry meaning.
 | `⇧⌥⌘↑` / `⇧⌥⌘↓` | brighter / darker, 2 % steps |
 
 The shortcuts act on the monitor the pointer is currently on — with several screens, that is
-the one you are working at. With *Monitore koppeln* (link monitors) active they act on every
+the one you are working at. With *Link monitors* active they act on every
 controllable monitor at once.
 
 ### The keyboard's own keys
 
-The brightness and volume keys can be mapped onto the monitors — the *Tasten der Tastatur
-verwenden* switch in the menu. They then adjust in sixteenths, the way macOS does on internal
+The brightness and volume keys can be mapped onto the monitors — the *Use the keyboard's keys*
+switch in the menu. They then adjust in sixteenths, the way macOS does on internal
 displays, and the mute key mutes the monitor.
 
 This is worth it above all for monitor speakers over DisplayPort or HDMI: such devices
@@ -154,7 +154,7 @@ typed text could be reconstructed.
 
 Holding `⌥` passes the keys through to macOS, so `⌥` + volume still opens the sound settings.
 
-*Beim Anmelden starten* (launch at login) creates a LaunchAgent at
+*Launch at login* creates a LaunchAgent at
 `~/Library/LaunchAgents/de.webdrian.brightnessbar.agent.plist`. It stores the absolute path to
 the app: move the app to its final location first, then switch this on.
 
@@ -281,7 +281,7 @@ same thing:
 * 0 % corresponds to a factor of 0.15, not black. A display you can no longer see is a display
   you can no longer set back.
 
-The *Softwaredimmung, wo DDC fehlt* switch is on by default, because the affected monitors
+The *Gamma dimming where DDC is missing* switch is on by default, because the affected monitors
 would otherwise not be adjustable at all. Switched off, the app restores every gamma table and
 lists those displays as not controllable.
 

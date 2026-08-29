@@ -21,7 +21,7 @@ final class SettingsWindowController {
         }
         let hosting = NSHostingController(rootView: SettingsView(controller: DisplayController.shared))
         let window = NSWindow(contentViewController: hosting)
-        window.title = "Einstellungen"
+        window.title = L("Einstellungen")
         window.styleMask = [.titled, .closable]
         window.isReleasedWhenClosed = false
         window.center()
@@ -139,7 +139,7 @@ struct SettingsView: View {
                     .font(.system(size: 12))
                 Spacer()
                 Text(appearance.selection == Appearance.systemToken
-                     ? "Folgt der Systemfarbe"
+                     ? L("Folgt der Systemfarbe")
                      : appearance.selection.uppercased())
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundStyle(.secondary)
@@ -176,14 +176,14 @@ struct SettingsView: View {
             .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .help(name)
+        .help(L(name))
     }
 
     // MARK: Pieces
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(title)
+            Text(L(title))
                 .font(.system(size: 11, weight: .semibold))
                 .kerning(0.6)
                 .textCase(.uppercase)
@@ -194,11 +194,11 @@ struct SettingsView: View {
 
     private func settingToggle(_ title: String, _ explanation: String, isOn: Binding<Bool>) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Toggle(title, isOn: isOn)
+            Toggle(L(title), isOn: isOn)
                 .toggleStyle(.switch)
                 .controlSize(.small)
                 .font(.system(size: 12))
-            Text(explanation)
+            Text(L(explanation))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -251,9 +251,9 @@ struct SettingsView: View {
                         .fill(Color.primary.opacity(0.08))
                 )
                 .frame(width: 96, alignment: .leading)
-            Text(title)
+            Text(L(title))
                 .font(.system(size: 12))
-            Text(detail)
+            Text(L(detail))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
             Spacer(minLength: 0)

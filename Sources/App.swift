@@ -68,19 +68,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let appItem = NSMenuItem()
         let appMenu = NSMenu()
         appMenu.addItem(
-            withTitle: "Über \(AppInfo.name)",
+            withTitle: L("Über %@", AppInfo.name),
             action: #selector(showAbout),
             keyEquivalent: ""
         ).target = self
         appMenu.addItem(.separator())
         appMenu.addItem(
-            withTitle: "\(AppInfo.name) ausblenden",
+            withTitle: L("%@ ausblenden", AppInfo.name),
             action: #selector(NSApplication.hide(_:)),
             keyEquivalent: "h"
         )
         appMenu.addItem(.separator())
         appMenu.addItem(
-            withTitle: "\(AppInfo.name) beenden",
+            withTitle: L("%@ beenden", AppInfo.name),
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"
         )
@@ -88,15 +88,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mainMenu.addItem(appItem)
 
         let editItem = NSMenuItem()
-        let editMenu = NSMenu(title: "Bearbeiten")
-        editMenu.addItem(withTitle: "Kopieren", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-        editMenu.addItem(withTitle: "Alles auswählen", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        let editMenu = NSMenu(title: L("Bearbeiten"))
+        editMenu.addItem(withTitle: L("Kopieren"), action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: L("Alles auswählen"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         editItem.submenu = editMenu
         mainMenu.addItem(editItem)
 
         let windowItem = NSMenuItem()
-        let windowMenu = NSMenu(title: "Fenster")
-        windowMenu.addItem(withTitle: "Schließen", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        let windowMenu = NSMenu(title: L("Fenster"))
+        windowMenu.addItem(withTitle: L("Schließen"), action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
         windowItem.submenu = windowMenu
         mainMenu.addItem(windowItem)
         NSApp.windowsMenu = windowMenu

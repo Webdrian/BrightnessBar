@@ -77,7 +77,7 @@ struct MenuContent: View {
     private var emptyState: some View {
         HStack(spacing: 8) {
             ProgressView().controlSize(.small)
-            Text(controller.isScanning ? "Displays werden gesucht …" : "Kein Display gefunden")
+            Text(L(controller.isScanning ? "Displays werden gesucht …" : "Kein Display gefunden"))
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
         }
@@ -269,7 +269,7 @@ struct DisplayControls: View {
                                 }
                             }
                         } label: {
-                            Text(display.currentInput.map { InputSource.name(for: $0) } ?? "wählen …")
+                            Text(display.currentInput.map { InputSource.name(for: $0) } ?? L("wählen …"))
                                 .font(.system(size: 12))
                         }
                         .menuStyle(.borderlessButton)
@@ -296,6 +296,11 @@ struct DisplayControls: View {
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+            } else if display.isAirPlay {
+                Text("AirPlay überträgt nur das Bild — einen Steuerkanal zum Gerät gibt es dabei nicht. Helligkeit lässt sich hier nur am Fernseher selbst einstellen.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             } else {
                 Text("Dieser Anschluss leitet DDC/CI nicht durch. Adapter und Hubs zwischen Mac und Monitor sind die übliche Ursache — eine direkte DisplayPort- oder USB-C-Verbindung hilft.")
                     .font(.system(size: 11))
@@ -316,14 +321,10 @@ private func confirmInputSwitch(display: ManagedDisplay, to value: UInt8) {
 
     let alert = NSAlert()
     alert.alertStyle = .warning
-    alert.messageText = "\(display.displayLabel) auf \(InputSource.name(for: value)) umschalten?"
-    alert.informativeText = """
-        Dieser Bildschirm zeigt danach die andere Quelle, und das Bild dieses Macs verschwindet \
-        von ihm. Zurück geht es meist nur am Monitor selbst, weil viele Geräte über den \
-        inaktiven Eingang nicht mehr ansprechbar sind.
-        """
-    alert.addButton(withTitle: "Umschalten")
-    alert.addButton(withTitle: "Abbrechen")
+    alert.messageText = L("%@ auf %@ umschalten?", display.displayLabel, InputSource.name(for: value))
+    alert.informativeText = L("Dieser Bildschirm zeigt danach die andere Quelle, und das Bild dieses Macs verschwindet von ihm. Zurück geht es meist nur am Monitor selbst, weil viele Geräte über den inaktiven Eingang nicht mehr ansprechbar sind.")
+    alert.addButton(withTitle: L("Umschalten"))
+    alert.addButton(withTitle: L("Abbrechen"))
 
     NSApp.activate(ignoringOtherApps: true)
     if alert.runModal() == .alertFirstButtonReturn {
@@ -344,9 +345,9 @@ struct ValueSlider: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack {
-                Text(title).font(.system(size: 12))
+                Text(L(title)).font(.system(size: 12))
                 Spacer()
-                Text(valueLabel ?? "\(percent) %")
+                Text(verbatim: valueLabel ?? "\(percent) %")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
@@ -451,7 +452,11 @@ struct MonitorRow: View {
                     Text(display.displayLabel)
                         .font(.system(size: 12))
                         .lineLimit(1)
-                    if display.isSoftwareDimmed {
+                    if display.isAirPlay {
+                        Text("AirPlay")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                    } else if display.isSoftwareDimmed {
                         Text("Softwaredimmung")
                             .font(.system(size: 10))
                             .foregroundStyle(.secondary)
@@ -490,7 +495,7 @@ struct ActionRow<Accessory: View>: View {
                 .font(.system(size: 13))
                 .foregroundStyle(tint ?? .secondary)
                 .frame(width: Theme.rowIconWidth)
-            Text(title)
+            Text(L(title))
                 .font(.system(size: 12))
                 .foregroundStyle(tint ?? .primary)
             Spacer(minLength: 6)
