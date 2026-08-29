@@ -157,6 +157,9 @@ defaults write de.webdrian.brightnessbar logMediaKeys -bool false
 Protokolliert werden Medientasten-Codes und **ausschließlich** die Funktionstasten F1-F12 —
 nichts, woraus sich Getipptes rekonstruieren ließe.
 
+Dasselbe Protokoll hält beim Start fest, welche Sprache die Oberfläche aufgelöst hat — das ist
+das Erste, was man wissen will, wenn jemand die falsche meldet.
+
 Mit gehaltenem `⌥` gibt die App die Tasten an macOS durch, damit `⌥` + Lautstärke weiterhin
 die Toneinstellungen öffnet.
 
