@@ -95,3 +95,8 @@
 "AirPlay — kein DDC/CI möglich" = "AirPlay — kein DDC/CI möglich";
 "AirPlay" = "AirPlay";
 "AirPlay überträgt nur das Bild — einen Steuerkanal zum Gerät gibt es dabei nicht. Helligkeit lässt sich hier nur am Fernseher selbst einstellen." = "AirPlay überträgt nur das Bild — einen Steuerkanal zum Gerät gibt es dabei nicht. Helligkeit lässt sich hier nur am Fernseher selbst einstellen.";
+"Sprache" = "Sprache";
+"Systemsprache" = "Systemsprache";
+"Wirkt nach einem Neustart der App." = "Wirkt nach einem Neustart der App.";
+"Jetzt neu starten" = "Jetzt neu starten";
+"Die Oberfläche gibt es auf Deutsch und Englisch. „Systemsprache“ folgt der Einstellung von macOS." = "Die Oberfläche gibt es auf Deutsch und Englisch. „Systemsprache“ folgt der Einstellung von macOS.";

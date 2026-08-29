@@ -10,8 +10,8 @@ macOS gives you no slider for at all.
   <img src="docs/banner-en-light.png" width="960" alt="BrightnessBar: menu with sliders for brightness, contrast and volume">
 </picture>
 
-> **Language:** the interface follows your system language — German by default, English when
-> macOS is set to English. Both string tables ship with the app.
+> **Language:** German and English, switchable under *Settings … → Language*. The default
+> follows your system language.
 
 ## What this is for
 
@@ -32,7 +32,7 @@ BrightnessBar talks to the monitor directly over the I²C channel of its display
 * Link several monitors and adjust them together
 * Gamma-based dimming as a fallback when the DDC channel is unreachable
 * Launch at login, optional Dock icon, About window
-* German and English interface, following the system language
+* German and English interface, switchable in the settings
 * Needs **no** Accessibility or Screen Recording permission for any of the above
 
 ## Installation
