@@ -41,6 +41,10 @@ struct SettingsView: View {
     @State private var launchAtLogin = LoginItem.isEnabled
     @State private var showInDock = DockVisibility.isEnabled
     @ObservedObject private var appearance = Appearance.shared
+    @State private var language = AppLanguage.current
+    /// What the running process actually resolved to — the restart hint depends on this, not
+    /// on the stored choice.
+    private let launchedWith = AppLanguage.current
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
@@ -57,6 +61,10 @@ struct SettingsView: View {
 
             section("Farbe") {
                 accentPicker
+            }
+
+            section("Sprache") {
+                languagePicker
             }
 
             section("Tastatur") {
@@ -119,6 +127,36 @@ struct SettingsView: View {
         }
         .padding(24)
         .frame(width: 460)
+    }
+
+    private var languagePicker: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            Picker("", selection: $language) {
+                ForEach(AppLanguage.allCases, id: \.self) { option in
+                    Text(option.label).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .onChange(of: language) { _, newValue in AppLanguage.select(newValue) }
+
+            if language != launchedWith {
+                HStack(spacing: 10) {
+                    Text("Wirkt nach einem Neustart der App.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Theme.warning)
+                    Button("Jetzt neu starten") { AppLanguage.restartApp() }
+                        .buttonStyle(.link)
+                        .font(.system(size: 11))
+                    Spacer()
+                }
+            } else {
+                Text("Die Oberfläche gibt es auf Deutsch und Englisch. „Systemsprache“ folgt der Einstellung von macOS.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 
     private var accentPicker: some View {
