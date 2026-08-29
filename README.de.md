@@ -368,7 +368,8 @@ Softwaredimmung.
 
 Der `DisplayServices`-Pfad für interne Panels ist implementiert, aber **ungeprüft** — ein Mac
 Studio hat kein internes Display. Kurzbefehle und Medientasten sind inzwischen am echten Gerät bestätigt: `⌥⌘↑`/`⌥⌘↓` lösen
-aus und werden verarbeitet, Lautstärke und Stummschaltung laufen über die Tastatur. Die
+aus und werden verarbeitet, Lautstärke und Stummschaltung laufen über die Tastatur. Auch das
+Umschalten der Oberflächensprache im Einstellungsfenster und zurück ist bestätigt. Die
 Helligkeitstasten hängen von der Tastatur ab — siehe „Wenn eine Taste gar nichts auslöst".
 
 ## Autor
