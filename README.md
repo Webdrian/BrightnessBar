@@ -353,7 +353,8 @@ brightness, contrast, volume and mute all work, and a value once set stays put. 
 U2719D behind converters: not reachable over DDC, running on gamma dimming.
 
 Shortcuts and media keys are confirmed on real hardware: `⌥⌘↑`/`⌥⌘↓` fire and are handled,
-volume and mute work from the keyboard. The brightness keys depend on the keyboard — see "When
+volume and mute work from the keyboard. Switching the interface language from the settings
+window and back is confirmed too. The brightness keys depend on the keyboard — see "When
 a key does nothing at all".
 
 The `DisplayServices` path for internal panels is implemented but **untested** — a Mac Studio
