@@ -7,17 +7,10 @@ gar keinen Regler anbietet.
 > volume over DDC/CI on Apple Silicon, with a gamma-based dimming fallback for displays whose
 > I²C channel is unreachable. UI is in German.*
 
-<p align="center">
-  <img src="docs/hero.png" width="820" alt="BrightnessBar: Menü mit Reglern für Helligkeit, Kontrast, Lautstärke und Eingangswahl">
-</p>
-
-<p align="center">
-  <img src="docs/menu-light.png" width="290" alt="Menü im hellen Erscheinungsbild">
-  &nbsp;&nbsp;
-  <img src="docs/menu.png" width="290" alt="Menü im dunklen Erscheinungsbild">
-  &nbsp;&nbsp;
-  <img src="docs/settings.png" width="380" alt="Einstellungsfenster mit erklärten Tastenkürzeln">
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/banner-dark.png">
+  <img src="docs/banner-light.png" width="960" alt="BrightnessBar: Menü mit Reglern für Helligkeit, Kontrast und Lautstärke">
+</picture>
 
 Unter [`docs/index.html`](docs/index.html) liegt außerdem eine Projektseite. Sie lässt sich in
 den Repository-Einstellungen unter *Pages* aus dem Ordner `/docs` veröffentlichen.
@@ -84,6 +77,12 @@ Klick auf das Sonnensymbol in der Menüleiste öffnet die Regler. Das Menü zeig
 im Detail; darunter lässt sich zwischen den angeschlossenen wechseln. Der Punkt hinter jedem
 Namen sagt, wie er angesteuert wird — grün heißt Backlight über DDC/CI, gelb heißt
 Softwaredimmung, rot heißt gar nicht steuerbar.
+
+<p align="center">
+  <img src="docs/menu.png" width="300" alt="Menü mit Monitorauswahl und Statuspunkten">
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/settings.png" width="430" alt="Einstellungsfenster mit erklärten Tastenkürzeln">
+</p>
 
 Alle Schalter und eine Erklärung der Tastenkürzel stehen unter *Einstellungen …*. Dort lässt
 sich auch die **Farbe der Regler** wählen — zehn Vorgaben oder eine eigene; voreingestellt
