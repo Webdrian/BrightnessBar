@@ -183,7 +183,7 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("Gilt für die Regler und die Auswahl. Die Statuspunkte behalten ihre Farben — grün, gelb und rot bedeuten dort etwas.")
+            Text("Gilt für die Kopfleiste des Menüs und eingeschaltete Schaltflächen. Die Regler bleiben weiß, die Statuspunkte behalten ihre Farben — grün, gelb und rot bedeuten dort etwas.")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

@@ -73,20 +73,22 @@ nach `/Applications`. Selbst gebaut greift Gatekeeper gar nicht ein.
 ## Benutzung
 
 Klick auf das Sonnensymbol in der Menüleiste öffnet die Regler. Das Menü zeigt einen Monitor
-im Detail; darunter lässt sich zwischen den angeschlossenen wechseln. Der Punkt hinter jedem
-Namen sagt, wie er angesteuert wird — grün heißt Backlight über DDC/CI, gelb heißt
-Softwaredimmung, rot heißt gar nicht steuerbar.
+im Detail, jede Gruppe von Reglern auf einer eigenen Karte. Über ⌃⌄ in der Kopfleiste lässt
+sich zwischen den angeschlossenen Monitoren wechseln. Der Punkt neben dem Namen sagt, wie der
+Monitor angesteuert wird — grün heißt Backlight über DDC/CI, gelb heißt Softwaredimmung, rot
+heißt gar nicht steuerbar.
 
 <p align="center">
-  <img src="docs/menu.png" width="300" alt="Menü mit Monitorauswahl und Statuspunkten">
+  <img src="docs/menu.png" width="300" alt="Menü mit Karten für Bild, Ton und Eingang">
   &nbsp;&nbsp;&nbsp;
   <img src="docs/settings.png" width="430" alt="Einstellungsfenster mit erklärten Tastenkürzeln">
 </p>
 
 Alle Schalter und eine Erklärung der Tastenkürzel stehen unter *Einstellungen …*. Dort lässt
-sich auch die **Farbe der Regler** wählen — zehn Vorgaben oder eine eigene; voreingestellt
-ist die Akzentfarbe des Systems. Die Statuspunkte bleiben davon unberührt, weil grün, gelb
-und rot dort eine Bedeutung tragen.
+sich auch die **Akzentfarbe** des Menüs wählen — zehn Vorgaben oder eine eigene;
+voreingestellt ist die des Systems. Sie färbt die Kopfleiste und eingeschaltete Schaltflächen.
+Die Regler bleiben weiß, die Statuspunkte bleiben unberührt, weil grün, gelb und rot dort eine
+Bedeutung tragen.
 
 | Kürzel | Wirkung |
 |---|---|
@@ -312,7 +314,7 @@ macOS die Tabelle dabei verwirft.
 | `Sources/BuiltInBrightness.swift` | `DisplayServices`-Pfad für interne und Apple-Displays |
 | `Sources/Hotkeys.swift` | globale Kurzbefehle (Carbon), LaunchAgent |
 | `Sources/MediaKeys.swift` | Event-Tap für die Helligkeits- und Lautstärketasten |
-| `Sources/MenuUI.swift` | SwiftUI-Menü, Monitorauswahl, eigener Regler |
+| `Sources/MenuUI.swift` | SwiftUI-Menü mit Karten, Monitorauswahl, eigener Regler |
 | `Sources/Appearance.swift` | wählbare Akzentfarbe, getrennt von den Statusfarben |
 | `Sources/SettingsWindow.swift` | Einstellungsfenster samt Erklärung der Kurzbefehle |
 | `Sources/AboutWindow.swift` | Info-Fenster und App-Metadaten |

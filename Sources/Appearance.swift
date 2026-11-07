@@ -3,7 +3,8 @@ import AppKit
 
 // MARK: - Accent colour
 //
-// Only the interactive parts follow this: sliders and the selected row. Status colours stay
+// Only the menu's highlights follow this: the header bar, active tiles and the link mark. The
+// slider fill stays white, as in the card design. Status colours stay
 // fixed, because a green dot that means "works" and an amber one that means "only the image
 // is being dimmed" would lose their meaning if the user could repaint them.
 

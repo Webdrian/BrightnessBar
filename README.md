@@ -70,20 +70,21 @@ cd BrightnessBar
 ## Usage
 
 Click the sun symbol in the menu bar to open the controls. The menu shows one monitor in
-detail, and below it you can switch between the connected ones. The dot after each name says
-how it is being driven — green means backlight over DDC/CI, amber means gamma dimming, red
-means not controllable at all.
+detail, each group of controls on a card of its own. ⌃⌄ in the header bar switches between the
+connected monitors. The dot next to the name says how the monitor is being driven — green
+means backlight over DDC/CI, amber means gamma dimming, red means not controllable at all.
 
 <p align="center">
-  <img src="docs/menu-en.png" width="300" alt="Menu with monitor picker and status dots">
+  <img src="docs/menu-en.png" width="300" alt="Menu with cards for picture, sound and input">
   &nbsp;&nbsp;&nbsp;
   <img src="docs/settings-en.png" width="430" alt="Settings window with the shortcuts explained">
 </p>
 
 Every switch, plus an explanation of the shortcuts, lives under *Settings …*.
-The **slider colour** is configurable there as well — ten presets or a colour of your own; the
-system accent colour is the default. The status dots stay as they are, because green, amber
-and red carry meaning.
+The menu's **accent colour** is configurable there as well — ten presets or a colour of your
+own; the system's is the default. It colours the header bar and switched-on buttons. The
+sliders stay white, and the status dots stay as they are, because green, amber and red carry
+meaning.
 
 | Shortcut | Effect |
 |---|---|
@@ -304,7 +305,7 @@ a display reconfiguration it sets the value again, because macOS discards the ta
 | `Sources/AudioOutput.swift` | which device the sound is going to, and whether macOS can set its volume |
 | `Sources/Hotkeys.swift` | global shortcuts (Carbon), LaunchAgent |
 | `Sources/MediaKeys.swift` | event tap for the keyboard's media keys |
-| `Sources/MenuUI.swift` | SwiftUI menu, monitor picker, hand-drawn slider |
+| `Sources/MenuUI.swift` | SwiftUI menu with cards, monitor picker, hand-drawn slider |
 | `Sources/SettingsWindow.swift` | settings window including the shortcut reference |
 | `Sources/AboutWindow.swift` | About window and app metadata |
 | `Sources/Appearance.swift` | selectable accent colour, kept apart from the status colours |

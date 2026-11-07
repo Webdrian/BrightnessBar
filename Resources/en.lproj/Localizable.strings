@@ -58,7 +58,7 @@
 "Beim Anmelden starten" = "Launch at login";
 "Im Dock anzeigen" = "Show in Dock";
 "Eigene Farbe …" = "Custom colour …";
-"Gilt für die Regler und die Auswahl. Die Statuspunkte behalten ihre Farben — grün, gelb und rot bedeuten dort etwas." = "Applies to the sliders and the selection. The status dots keep their colours — green, amber and red mean something there.";
+"Gilt für die Kopfleiste des Menüs und eingeschaltete Schaltflächen. Die Regler bleiben weiß, die Statuspunkte behalten ihre Farben — grün, gelb und rot bedeuten dort etwas." = "Applies to the menu's header bar and switched-on buttons. The sliders stay white, and the status dots keep their colours — green, amber and red mean something there.";
 "Diese vier wirken immer, ohne Zusatzrechte. Sie regeln den Monitor, auf dem der Mauszeiger gerade steht — oder alle zugleich, wenn im Menü *Monitore koppeln* aktiv ist." = "These four always work, without extra permissions. They adjust the monitor the pointer is on — or all of them at once when *Link monitors* is active in the menu.";
 "Reagiert eine dieser Tasten nicht, erzeugt die Tastatur dafür kein Ereignis — manche Herstellersoftware führt sie selbst aus. Dann hilft es, die Taste dort auf ⌥⌘↑ bzw. ⌥⌘↓ zu legen." = "If one of these keys does nothing, the keyboard generates no event for it — some vendor software executes it itself. Mapping the key to ⌥⌘↑ or ⌥⌘↓ there helps.";
 "Einstellungen" = "Settings";
@@ -100,3 +100,7 @@
 "Wirkt nach einem Neustart der App." = "Takes effect after restarting the app.";
 "Jetzt neu starten" = "Restart now";
 "Die Oberfläche gibt es auf Deutsch und Englisch. „Systemsprache“ folgt der Einstellung von macOS." = "The interface is available in German and English. “System language” follows the macOS setting.";
+"Beenden" = "Quit";
+"Ein" = "On";
+"Aus" = "Off";
+"stumm" = "muted";

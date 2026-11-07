@@ -58,7 +58,7 @@
 "Beim Anmelden starten" = "Beim Anmelden starten";
 "Im Dock anzeigen" = "Im Dock anzeigen";
 "Eigene Farbe …" = "Eigene Farbe …";
-"Gilt für die Regler und die Auswahl. Die Statuspunkte behalten ihre Farben — grün, gelb und rot bedeuten dort etwas." = "Gilt für die Regler und die Auswahl. Die Statuspunkte behalten ihre Farben — grün, gelb und rot bedeuten dort etwas.";
+"Gilt für die Kopfleiste des Menüs und eingeschaltete Schaltflächen. Die Regler bleiben weiß, die Statuspunkte behalten ihre Farben — grün, gelb und rot bedeuten dort etwas." = "Gilt für die Kopfleiste des Menüs und eingeschaltete Schaltflächen. Die Regler bleiben weiß, die Statuspunkte behalten ihre Farben — grün, gelb und rot bedeuten dort etwas.";
 "Diese vier wirken immer, ohne Zusatzrechte. Sie regeln den Monitor, auf dem der Mauszeiger gerade steht — oder alle zugleich, wenn im Menü *Monitore koppeln* aktiv ist." = "Diese vier wirken immer, ohne Zusatzrechte. Sie regeln den Monitor, auf dem der Mauszeiger gerade steht — oder alle zugleich, wenn im Menü *Monitore koppeln* aktiv ist.";
 "Reagiert eine dieser Tasten nicht, erzeugt die Tastatur dafür kein Ereignis — manche Herstellersoftware führt sie selbst aus. Dann hilft es, die Taste dort auf ⌥⌘↑ bzw. ⌥⌘↓ zu legen." = "Reagiert eine dieser Tasten nicht, erzeugt die Tastatur dafür kein Ereignis — manche Herstellersoftware führt sie selbst aus. Dann hilft es, die Taste dort auf ⌥⌘↑ bzw. ⌥⌘↓ zu legen.";
 "Einstellungen" = "Einstellungen";
@@ -100,3 +100,7 @@
 "Wirkt nach einem Neustart der App." = "Wirkt nach einem Neustart der App.";
 "Jetzt neu starten" = "Jetzt neu starten";
 "Die Oberfläche gibt es auf Deutsch und Englisch. „Systemsprache“ folgt der Einstellung von macOS." = "Die Oberfläche gibt es auf Deutsch und Englisch. „Systemsprache“ folgt der Einstellung von macOS.";
+"Beenden" = "Beenden";
+"Ein" = "Ein";
+"Aus" = "Aus";
+"stumm" = "stumm";
