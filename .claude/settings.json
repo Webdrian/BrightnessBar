@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "bama": {
+      "source": {
+        "source": "github",
+        "repo": "daveebbelaar/bama"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "bama@bama": true
+  }
+}
